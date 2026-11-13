@@ -7878,6 +7878,112 @@ render();
 })();
 </script>
 
+<script>
+(function () {
+  if (document.getElementById("mira-cloud-migration")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-cloud-migration";
+  box.style.cssText =
+    "max-width:960px;margin:20px auto;padding:18px;background:#fff;border:1px solid #ddd;border-radius:12px";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜クラウド移行</h2>
+    <p>既存データを確認し、まだクラウドにないデータだけを保存します。</p>
+    <button id="mira-cloud-start"
+      style="width:100%;padding:14px;background:#20201f;color:white;border:0;border-radius:8px">
+      クラウドへデータを移す
+    </button>
+    <p id="mira-cloud-result">まだ実行していません。</p>
+  `;
+
+  document.body.appendChild(box);
+
+  document.getElementById("mira-cloud-start").onclick = async function () {
+    const result = document.getElementById("mira-cloud-result");
+    const button = this;
+    button.disabled = true;
+    result.textContent = "データを確認しています…";
+
+    try {
+      const config = JSON.parse(
+        localStorage.getItem("mira_sb_config_v1") || "null"
+      );
+
+      if (!config || !window.supabase) {
+        throw new Error("Supabase接続設定を確認してください");
+      }
+
+      const client = window.supabase.createClient(
+        config.url,
+        config.key
+      );
+
+      const { data: sessionData, error: sessionError } =
+        await client.auth.getSession();
+
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        throw new Error("先に管理画面へログインしてください");
+      }
+
+      const keys = Object.keys(localStorage)
+        .filter(key => key.startsWith("mira_design"));
+
+      let added = 0;
+      let skipped = 0;
+
+      for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (raw === null) continue;
+
+        let payload;
+        try {
+          payload = JSON.parse(raw);
+        } catch {
+          payload = { raw };
+        }
+
+        const { data: existing, error: readError } =
+          await client
+            .from("manager_records")
+            .select("id")
+            .eq("record_type", "local_data")
+            .eq("local_id", key)
+            .maybeSingle();
+
+        if (readError) throw readError;
+
+        if (existing) {
+          skipped++;
+          continue;
+        }
+
+        const { error: insertError } = await client
+          .from("manager_records")
+          .insert({
+            record_type: "local_data",
+            local_id: key,
+            payload: payload
+          });
+
+        if (insertError) throw insertError;
+        added++;
+      }
+
+      result.textContent =
+        "完了！新規保存：" + added +
+        "件／既存データのためスキップ：" + skipped + "件";
+    } catch (error) {
+      result.textContent = "エラー：" + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  };
+})();
+</script>
+
+
 
 
 
