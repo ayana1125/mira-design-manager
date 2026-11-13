@@ -101,5 +101,14 @@ init();
   console.log("見積番号:", quoteNumber);
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("body *").forEach(function (el) {
+    if (el.children.length === 0 && el.textContent.includes("\\n")) {
+      el.textContent = el.textContent.replace(/\\n/g, "\n");
+    }
+  });
+});
+</script>
 
 
