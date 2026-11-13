@@ -234,6 +234,173 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const nav = document.querySelector("nav");
+  const app = document.getElementById("app");
+
+  if (!nav || !app) return;
+
+  // 入金管理タブを追加
+  const tab = document.createElement("button");
+  tab.textContent = "入金・売上管理";
+  tab.dataset.tab = "payment";
+  nav.appendChild(tab);
+
+  const panel = document.createElement("section");
+  panel.id = "payment";
+  panel.className = "tab hidden";
+  panel.innerHTML = `
+    <div class="panel">
+      <h2>売上・入金管理</h2>
+      <div class="stats">
+        <div class="stat">
+          <small>今月の入金売上</small>
+          <strong id="monthlyPaid">¥0</strong>
+        </div>
+        <div class="stat">
+          <small>未入金合計</small>
+          <strong id="unpaidTotal">¥0</strong>
+        </div>
+        <div class="stat">
+          <small>未入金件数</small>
+          <strong id="unpaidCount">0</strong>
+        </div>
+        <div class="stat">
+          <small>入金済み件数</small>
+          <strong id="paidCount">0</strong>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>案件別の入金状況</h2>
+      <div id="paymentList"></div>
+    </div>
+  `;
+  app.appendChild(panel);
+
+  function money(n) {
+    return "¥" + Number(n || 0).toLocaleString("ja-JP");
+  }
+
+  function renderPayment() {
+    const now = new Date();
+    const month =
+      now.getFullYear() + "-" +
+      String(now.getMonth() + 1).padStart(2, "0");
+
+    const unpaid = projects.filter(
+      p => p.payment_status !== "入金済み"
+    );
+
+    const paid = projects.filter(
+      p => p.payment_status === "入金済み"
+    );
+
+    const monthly = paid
+      .filter(p => p.paid_at && p.paid_at.startsWith(month))
+      .reduce((sum, p) =>
+        sum + Number(p.payment_amount ?? p.price ?? 0), 0);
+
+    document.getElementById("monthlyPaid").textContent =
+      money(monthly);
+
+    document.getElementById("unpaidTotal").textContent =
+      money(unpaid.reduce((sum, p) =>
+        sum + Number(p.payment_amount ?? p.price ?? 0), 0));
+
+    document.getElementById("unpaidCount").textContent =
+      unpaid.length;
+
+    document.getElementById("paidCount").textContent =
+      paid.length;
+
+    document.getElementById("paymentList").innerHTML =
+      projects.map(p => `
+        <div class="item" data-id="${esc(p.id)}">
+          <strong>${esc(p.name)}</strong>
+          <div class="meta">
+            お客様：${esc(p.client)}<br>
+            請求金額：${money(p.payment_amount ?? p.price)}
+          </div>
+          <div class="field">
+            <label>入金状況</label>
+            <select class="pay-status">
+              <option ${p.payment_status === "未入金" ? "selected" : ""}>未入金</option>
+              <option ${p.payment_status === "入金済み" ? "selected" : ""}>入金済み</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>入金日</label>
+            <input class="pay-date" type="date"
+              value="${esc(p.paid_at || "")}">
+          </div>
+          <span class="note">変更すると自動保存されます。</span>
+        </div>
+      `).join("") || '<div class="empty">案件がありません。</div>';
+  }
+
+  async function savePayment(card) {
+    const id = card.dataset.id;
+    const status = card.querySelector(".pay-status").value;
+    let date = card.querySelector(".pay-date").value;
+
+    if (status === "入金済み" && !date) {
+      date = new Date().toISOString().slice(0, 10);
+      card.querySelector(".pay-date").value = date;
+    }
+
+    if (status === "未入金") date = null;
+
+    const { error } = await sb.from("projects")
+      .update({
+        payment_status: status,
+        paid_at: date
+      })
+      .eq("id", id);
+
+    if (error) {
+      toast("保存エラー：" + error.message);
+      return;
+    }
+
+    const { data, error: readError } = await sb
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (readError) {
+      toast("再読み込みエラー：" + readError.message);
+      return;
+    }
+
+    projects = data || [];
+    render();
+    renderPayment();
+    toast("入金情報を保存しました");
+  }
+
+  panel.addEventListener("change", function (e) {
+    if (!e.target.matches(".pay-status, .pay-date")) return;
+    const card = e.target.closest(".item");
+    savePayment(card);
+  });
+
+  tab.addEventListener("click", function () {
+    nav.querySelectorAll("button").forEach(b =>
+      b.classList.toggle("active", b === tab)
+    );
+    document.querySelectorAll(".tab").forEach(s =>
+      s.classList.add("hidden")
+    );
+    panel.classList.remove("hidden");
+    renderPayment();
+  });
+
+  renderPayment();
+});
+</script>
+
 
 
 
