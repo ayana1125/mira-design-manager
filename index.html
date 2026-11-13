@@ -607,6 +607,274 @@ document.addEventListener("DOMContentLoaded", function () {
   render();
 })();
 </script>
+<script>
+(function () {
+  const result = document.getElementById("quoteResult");
+  if (!result || document.getElementById("saveQuoteProject")) return;
+
+  const button = document.createElement("button");
+  button.id = "saveQuoteProject";
+  button.className = "btn gold";
+  button.textContent = "この見積もりを案件一覧に登録";
+  result.appendChild(button);
+
+  button.addEventListener("click", async function () {
+    const name = document.getElementById("qTitle").value.trim();
+    const client = document.getElementById("qClient").value.trim();
+    const email = document.getElementById("qEmail").value.trim();
+    const base = Number(document.getElementById("qBase").value || 0);
+    const extra = Number(document.getElementById("qExtra").value || 0);
+    const scope = document.getElementById("qScope").value;
+
+    if (!name || !client) {
+      alert("案件名とお客様名を入力してください");
+      return;
+    }
+
+    if (!confirm("この見積もりを案件一覧に登録しますか？")) return;
+
+    button.disabled = true;
+    button.textContent = "登録中...";
+
+    try {
+      await saveProject({
+        name: name,
+        client: client,
+        contact: email,
+        plan: "見積もり",
+        price: base + extra,
+        due: null,
+        status: "見積もり提出",
+        memo: scope
+      });
+
+      alert("案件一覧に登録しました！");
+      document.querySelector('[data-tab="list"]').click();
+
+    } catch (error) {
+      alert("登録できませんでした：" + error.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = "この見積もりを案件一覧に登録";
+    }
+  });
+})();
+</script>
+<script>
+(function () {
+  const KEY = "mira_design_features_9_12";
+  let data = JSON.parse(localStorage.getItem(KEY) || '{"orders":[]}');
+
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+  const yen = n => "¥" + Number(n || 0).toLocaleString("ja-JP");
+  const today = new Date().toISOString().slice(0, 10);
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-9-12";
+  box.style.cssText = "margin:25px auto;padding:20px;max-width:1000px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;color:#333;font-family:sans-serif";
+
+  box.innerHTML = `
+    <h2> MIRA DESIGN｜追加管理機能 ⑨〜⑫</h2>
+
+    <h3>⑨ 予約・受付管理</h3>
+    <input id="m9-name" placeholder="お客様名">
+    <input id="m9-title" placeholder="注文内容">
+    <input id="m9-date" type="date">
+    <input id="m9-price" type="number" placeholder="金額">
+    <button id="m9-add">受付登録</button>
+
+    <hr>
+    <h3>⑩ デザイン制作管理</h3>
+    <div id="m9-list"></div>
+
+    <hr>
+    <h3>⑪ お知らせ</h3>
+    <div id="m11-alert"></div>
+
+    <hr>
+    <h3>⑫ 経営レポート</h3>
+    <p>売上合計：<strong id="m12-sales">¥0</strong></p>
+    <p>注文件数：<strong id="m12-count">0件</strong></p>
+    <p>経費合計：<strong id="m12-cost">¥0</strong></p>
+    <p>利益：<strong id="m12-profit">¥0</strong></p>
+    <p>利益率：<strong id="m12-rate">0%</strong></p>
+    <h4>お客様ごとの売上</h4>
+    <div id="m12-customers"></div>
+    <h4>注文内容ランキング</h4>
+    <div id="m12-ranking"></div>
+
+    <hr>
+    <h3>経費登録</h3>
+    <input id="m12-expense-name" placeholder="経費の内容">
+    <input id="m12-expense" type="number" placeholder="金額">
+    <button id="m12-expense-add">経費を登録</button>
+  `;
+
+  document.body.appendChild(box);
+
+  const list = document.getElementById("m9-list");
+
+  function render() {
+    list.innerHTML = "";
+
+    data.orders.forEach((o, i) => {
+      const item = document.createElement("div");
+      item.style.cssText = "padding:12px;margin:8px 0;background:white;border-radius:8px;border:1px solid #ddd";
+
+      const title = document.createElement("strong");
+      title.textContent = o.name + "｜" + o.title;
+
+      const details = document.createElement("p");
+      details.textContent = "納期：" + (o.date || "未設定") + "｜金額：" + yen(o.price);
+
+      const status = document.createElement("select");
+      ["受付済み", "制作中", "確認待ち", "修正中", "納品済み"].forEach(s => {
+        const option = document.createElement("option");
+        option.value = s;
+        option.textContent = s;
+        status.appendChild(option);
+      });
+      status.value = o.status;
+      status.addEventListener("change", () => {
+        o.status = status.value;
+        save();
+        render();
+      });
+
+      const revisions = document.createElement("input");
+      revisions.type = "number";
+      revisions.min = "0";
+      revisions.value = o.revisions || 0;
+      revisions.placeholder = "修正回数";
+      revisions.addEventListener("change", () => {
+        o.revisions = Number(revisions.value || 0);
+        save();
+        render();
+      });
+
+      const delivery = document.createElement("input");
+      delivery.placeholder = "納品データ名・URLなど";
+      delivery.value = o.delivery || "";
+      delivery.addEventListener("change", () => {
+        o.delivery = delivery.value;
+        save();
+      });
+
+      const remove = document.createElement("button");
+      remove.textContent = "削除";
+      remove.addEventListener("click", () => {
+        if (confirm("この注文を削除しますか？")) {
+          data.orders.splice(i, 1);
+          save();
+          render();
+        }
+      });
+
+      item.append(title, details, document.createElement("br"),
+        status, document.createElement("br"),
+        revisions, document.createElement("br"),
+        delivery, document.createElement("br"), remove);
+
+      list.appendChild(item);
+    });
+
+    renderAlerts();
+    renderReport();
+  }
+
+  document.getElementById("m9-add").addEventListener("click", () => {
+    const name = document.getElementById("m9-name").value.trim();
+    const title = document.getElementById("m9-title").value.trim();
+    const date = document.getElementById("m9-date").value;
+    const price = Number(document.getElementById("m9-price").value || 0);
+
+    if (!name || !title) {
+      alert("お客様名と注文内容を入力してください");
+      return;
+    }
+
+    data.orders.push({
+      name, title, date, price,
+      status: "受付済み",
+      revisions: 0,
+      delivery: "",
+      created: today
+    });
+
+    save();
+    render();
+
+    document.getElementById("m9-name").value = "";
+    document.getElementById("m9-title").value = "";
+    document.getElementById("m9-date").value = "";
+    document.getElementById("m9-price").value = "";
+    alert("注文を登録しました！");
+  });
+
+  function renderAlerts() {
+    const alerts = [];
+
+    data.orders.forEach(o => {
+      if (o.status !== "納品済み" && o.date && o.date <= today) {
+        alerts.push("納期確認：" + o.name + "／" + o.title + "（" + o.date + "）");
+      }
+    });
+
+    document.getElementById("m11-alert").textContent =
+      alerts.length ? alerts.join(" ／ ") : "現在、期限を過ぎた未納品案件はありません。";
+  }
+
+  function renderReport() {
+    const sales = data.orders.reduce((sum, o) => sum + Number(o.price || 0), 0);
+    const costs = Number(data.expenses || 0);
+    const profit = sales - costs;
+    const rate = sales ? Math.round(profit / sales * 100) : 0;
+
+    document.getElementById("m12-sales").textContent = yen(sales);
+    document.getElementById("m12-count").textContent = data.orders.length + "件";
+    document.getElementById("m12-cost").textContent = yen(costs);
+    document.getElementById("m12-profit").textContent = yen(profit);
+    document.getElementById("m12-rate").textContent = rate + "%";
+
+    const customers = {};
+    const ranking = {};
+
+    data.orders.forEach(o => {
+      customers[o.name] = (customers[o.name] || 0) + Number(o.price || 0);
+      ranking[o.title] = (ranking[o.title] || 0) + 1;
+    });
+
+    document.getElementById("m12-customers").textContent =
+      Object.entries(customers).map(([name, amount]) => name + "：" + yen(amount)).join(" ／ ") || "データなし";
+
+    document.getElementById("m12-ranking").textContent =
+      Object.entries(ranking)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, count]) => name + "：" + count + "件")
+        .join(" ／ ") || "データなし";
+  }
+
+  document.getElementById("m12-expense-add").addEventListener("click", () => {
+    const name = document.getElementById("m12-expense-name").value.trim();
+    const amount = Number(document.getElementById("m12-expense").value || 0);
+
+    if (!name || amount <= 0) {
+      alert("経費の内容と金額を入力してください");
+      return;
+    }
+
+    data.expenses = Number(data.expenses || 0) + amount;
+    save();
+    renderReport();
+
+    document.getElementById("m12-expense-name").value = "";
+    document.getElementById("m12-expense").value = "";
+    alert("経費を登録しました！");
+  });
+
+  render();
+})();
+</script>
 
 
 
