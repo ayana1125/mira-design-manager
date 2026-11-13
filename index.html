@@ -110,5 +110,76 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const expiry = document.getElementById("qExpiry");
+  const makeButton = document.getElementById("makeQuote");
+
+  function formatDate(date) {
+    return date.getFullYear() + "-" +
+      String(date.getMonth() + 1).padStart(2, "0") + "-" +
+      String(date.getDate()).padStart(2, "0");
+  }
+
+  // 見積有効期限を発行日から14日後に設定
+  if (expiry && !expiry.value) {
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    expiry.value = formatDate(d);
+  }
+
+  // 見積書のデザイン調整
+  const style = document.createElement("style");
+  style.textContent = `
+    #quoteText {
+      white-space: pre-wrap !important;
+      overflow-wrap: anywhere;
+      line-height: 2 !important;
+      font-family: sans-serif;
+    }
+    @media print {
+      #quoteText {
+        border-top: 3px solid #b48a4a !important;
+        padding-top: 20px !important;
+        background: white !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // 見積書作成後に発行日・番号を追加
+  if (makeButton) {
+    makeButton.addEventListener("click", function () {
+      const output = document.getElementById("quoteText");
+      if (!output) return;
+
+      let text = output.textContent;
+
+      // 文字としての \n を実際の改行に変換
+      text = text.replace(/\\n/g, "\n");
+
+      const today = new Date();
+      const date = formatDate(today);
+      const number =
+        "MD-" +
+        date.replace(/-/g, "") +
+        "-" +
+        Math.random().toString(36)
+          .substring(2, 6).toUpperCase();
+
+      text = text.replace(
+        /^MIRA DESIGN\n御見積書\n*/,
+        "◆ M I R A   D E S I G N ◆\n" +
+        "御 見 積 書\n\n" +
+        "発行日：" + date + "\n" +
+        "見積番号：" + number + "\n\n"
+      );
+
+      output.textContent = text;
+    });
+  }
+});
+</script>
+
 
 
