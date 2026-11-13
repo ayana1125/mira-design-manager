@@ -86,3 +86,20 @@ sbAuthListener();
 function sbAuthListener(){/* session state is checked on startup; sign-in/out buttons handle this MVP */}
 init();
 </script></body></html>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+  const today = new Date();
+  const date = today.getFullYear() + "-" +
+    String(today.getMonth() + 1).padStart(2, "0") + "-" +
+    String(today.getDate()).padStart(2, "0");
+
+  const quoteNumber = "MD-" +
+    date.replace(/-/g, "") + "-" +
+    Math.random().toString(36).substring(2, 6).toUpperCase();
+
+  console.log("発行日:", date);
+  console.log("見積番号:", quoteNumber);
+});
+</script>
+
+
