@@ -400,6 +400,214 @@ document.addEventListener("DOMContentLoaded", function () {
   renderPayment();
 });
 </script>
+<script>
+(function () {
+  const KEY = "mira_design_manager_v1";
+  let db = JSON.parse(localStorage.getItem(KEY) || '{"customers":[],"orders":[],"expenses":[]}');
+
+  const save = () => localStorage.setItem(KEY, JSON.stringify(db));
+  const yen = n => Number(n || 0).toLocaleString("ja-JP") + "円";
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+
+  document.body.insertAdjacentHTML("beforeend", `
+  <style>
+  #mira-extra{position:relative;margin:24px auto;padding:16px;max-width:900px;
+    background:#fff7ef;color:#49382e;border:1px solid #e8c9ad;border-radius:14px;
+    font-family:Arial,sans-serif}
+  #mira-extra h2{font-size:21px}
+  #mira-extra h3{margin-top:22px}
+  #mira-extra input,#mira-extra select{padding:10px;margin:4px 0;
+    width:100%;box-sizing:border-box;border:1px solid #d8c6b8;border-radius:8px}
+  #mira-extra button{padding:10px 13px;margin:4px;border:0;border-radius:8px;
+    background:#a85f35;color:white}
+  #mira-extra .item{background:white;padding:12px;margin:8px 0;border-radius:9px}
+  #mira-extra .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #mira-extra .stat{background:white;padding:12px;border-radius:9px}
+  </style>
+  <section id="mira-extra">
+    <h2>🍊 MIRA DESIGN 管理センター</h2>
+    <p>売上・顧客・注文・請求・経費をまとめて管理</p>
+
+    <h3>① 売上・年間集計</h3>
+    <div class="stats">
+      <div class="stat">今月売上<br><b id="m-month">0円</b></div>
+      <div class="stat">年間売上<br><b id="m-year">0円</b></div>
+      <div class="stat">未入金額<br><b id="m-unpaid">0円</b></div>
+      <div class="stat">利益（売上−経費）<br><b id="m-profit">0円</b></div>
+    </div>
+
+    <h3>②〜④ 顧客・注文管理</h3>
+    <form id="m-customer">
+      <b>顧客登録</b>
+      <input name="name" placeholder="お客様の名前" required>
+      <input name="contact" placeholder="電話番号・メールなど">
+      <button>顧客を登録</button>
+    </form>
+    <div id="m-customers"></div>
+
+    <form id="m-order">
+      <b>注文登録</b>
+      <input name="project" placeholder="制作内容・案件名" required>
+      <input name="client" placeholder="お客様の名前" required>
+      <input name="price" type="number" min="0" placeholder="注文金額" required>
+      <input name="paid" type="number" min="0" placeholder="入金済み金額" value="0">
+      <input name="date" type="date" required>
+      <select name="status">
+        <option>受付</option><option>制作中</option>
+        <option>確認待ち</option><option>納品済み</option>
+      </select>
+      <button>注文を登録</button>
+    </form>
+    <div id="m-orders"></div>
+
+    <h3>⑤ 請求書</h3>
+    <p>注文一覧の「請求書を印刷」から発行できるよ。</p>
+
+    <h3>⑥ 経費・利益管理</h3>
+    <form id="m-expense">
+      <input name="name" placeholder="経費の内容（例：Canva）" required>
+      <input name="amount" type="number" min="0" placeholder="金額" required>
+      <input name="date" type="date" required>
+      <button>経費を登録</button>
+    </form>
+    <div id="m-expenses"></div>
+
+    <h3>⑦ バックアップ・復元</h3>
+    <button type="button" id="m-backup">データをバックアップ</button>
+    <label>バックアップファイルを選択
+      <input type="file" id="m-restore" accept=".json,application/json">
+    </label>
+    <p>※この管理センターのデータを保存・復元する機能です。</p>
+  </section>
+  `);
+
+  const root = document.getElementById("mira-extra");
+  const $ = s => root.querySelector(s);
+
+  function render() {
+    const now = new Date();
+    const ym = now.toISOString().slice(0,7);
+    const year = now.getFullYear().toString();
+
+    const sales = db.orders.reduce((a,o)=>a+Number(o.price||0),0);
+    const paid = db.orders.reduce((a,o)=>a+Number(o.paid||0),0);
+    const unpaid = db.orders.reduce((a,o)=>a+Math.max(0,Number(o.price||0)-Number(o.paid||0)),0);
+    const month = db.orders.filter(o=>o.date?.startsWith(ym))
+      .reduce((a,o)=>a+Number(o.price||0),0);
+    const annual = db.orders.filter(o=>o.date?.startsWith(year))
+      .reduce((a,o)=>a+Number(o.price||0),0);
+    const expenses = db.expenses.reduce((a,e)=>a+Number(e.amount||0),0);
+
+    $("#m-month").textContent = yen(month);
+    $("#m-year").textContent = yen(annual);
+    $("#m-unpaid").textContent = yen(unpaid);
+    $("#m-profit").textContent = yen(sales-expenses);
+
+    $("#m-customers").innerHTML = "<b>登録顧客</b>" +
+      db.customers.map(c=>`<div class="item">${esc(c.name)}<br>
+      ${esc(c.contact)} <button data-customer="${c.id}">削除</button></div>`).join("");
+
+    $("#m-orders").innerHTML = "<b>注文一覧</b>" +
+      db.orders.map(o=>`<div class="item">
+      <b>${esc(o.project)}</b><br>
+      お客様：${esc(o.client)}<br>
+      注文金額：${yen(o.price)}<br>
+      入金済み：${yen(o.paid)}<br>
+      状況：${esc(o.status)}<br>
+      入金状況：${Number(o.paid)>=Number(o.price)?"入金済み":Number(o.paid)>0?"一部入金":"未入金"}
+      <br><button data-paid="${o.id}">入金済みにする</button>
+      <button data-invoice="${o.id}">請求書を印刷</button>
+      <button data-order="${o.id}">削除</button></div>`).join("");
+
+    $("#m-expenses").innerHTML = "<b>登録経費</b>" +
+      db.expenses.map(e=>`<div class="item">${esc(e.name)}：${yen(e.amount)}
+      （${esc(e.date)}） <button data-expense="${e.id}">削除</button></div>`).join("");
+  }
+
+  const id = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+  $("#m-customer").addEventListener("submit",e=>{
+    e.preventDefault();
+    const f=new FormData(e.target);
+    db.customers.push({id:id(),name:f.get("name"),contact:f.get("contact")});
+    save();e.target.reset();render();
+  });
+
+  $("#m-order").addEventListener("submit",e=>{
+    e.preventDefault();
+    const f=new FormData(e.target);
+    const price=Number(f.get("price")), paid=Number(f.get("paid"));
+    if(paid>price){alert("入金額が注文金額を超えています");return;}
+    db.orders.push({id:id(),project:f.get("project"),client:f.get("client"),
+      price,paid,date:f.get("date"),status:f.get("status")});
+    save();e.target.reset();render();
+  });
+
+  $("#m-expense").addEventListener("submit",e=>{
+    e.preventDefault();
+    const f=new FormData(e.target);
+    db.expenses.push({id:id(),name:f.get("name"),
+      amount:Number(f.get("amount")),date:f.get("date")});
+    save();e.target.reset();render();
+  });
+
+  root.addEventListener("click",e=>{
+    const b=e.target.closest("button");
+    if(!b)return;
+    if(b.dataset.customer) db.customers=db.customers.filter(x=>x.id!==b.dataset.customer);
+    if(b.dataset.order) db.orders=db.orders.filter(x=>x.id!==b.dataset.order);
+    if(b.dataset.expense) db.expenses=db.expenses.filter(x=>x.id!==b.dataset.expense);
+
+    if(b.dataset.paid){
+      const o=db.orders.find(x=>x.id===b.dataset.paid);
+      if(o)o.paid=Number(o.price);
+    }
+
+    if(b.dataset.invoice){
+      const o=db.orders.find(x=>x.id===b.dataset.invoice);
+      if(o){
+        const w=window.open("","_blank");
+        if(!w){alert("ポップアップを許可してね");return;}
+        w.document.write(`<html><meta charset="UTF-8"><title>請求書</title>
+        <body style="font-family:sans-serif;padding:40px">
+        <h1>請求書</h1><p>発行日：${new Date().toLocaleDateString("ja-JP")}</p>
+        <p>請求先：${esc(o.client)} 様</p>
+        <p>件名：${esc(o.project)}</p><h2>請求金額：${yen(Number(o.price)-Number(o.paid))}</h2>
+        <p>※入金済み金額を差し引いた残額です。</p><button onclick="window.print()">印刷する</button>
+        </body></html>`);
+        w.document.close();
+      }
+    }
+    save();render();
+  });
+
+  $("#m-backup").addEventListener("click",()=>{
+    const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;a.download="mira-design-backup.json";a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  $("#m-restore").addEventListener("change",async e=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    try{
+      const data=JSON.parse(await file.text());
+      if(!Array.isArray(data.customers)||!Array.isArray(data.orders)||!Array.isArray(data.expenses))
+        throw new Error();
+      if(!confirm("現在の管理センターのデータをバックアップ内容で置き換えますか？"))return;
+      db=data;save();render();alert("復元できました");
+    }catch(err){alert("バックアップファイルを読み込めませんでした");}
+    e.target.value="";
+  });
+
+  render();
+})();
+</script>
+
 
 
 
