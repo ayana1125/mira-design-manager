@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ご注文フォーム</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f6fa;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 500px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 3px 15px #ddd;
+    }
+    h1 { text-align: center; }
+    label {
+      display: block;
+      margin-top: 18px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+    textarea { min-height: 110px; }
+    button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 15px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+    #message {
+      margin-top: 15px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>ご注文フォーム</h1>
+  <p>必要事項をご入力のうえ、ご注文ください。</p>
+
+  <form id="orderForm">
+
+    <label>お名前 *</label>
+    <input name="customer_name" required>
+
+    <label>メールアドレス *</label>
+    <input type="email" name="email" required>
+
+    <label>電話番号</label>
+    <input name="phone">
+
+    <label>ご注文内容 *</label>
+    <input name="menu" required>
+
+    <label>ご予算</label>
+    <input name="budget">
+
+    <label>ご希望日</label>
+    <input type="date" name="desired_date">
+
+    <label>詳細・ご要望 *</label>
+    <textarea name="details" required></textarea>
+
+    <button type="submit" id="submitButton">
+      注文を送信する
+    </button>
+
+    <div id="message"></div>
+  </form>
+</div>
+
+<script>
+const SUPABASE_URL = "ここにSupabaseのProject URL";
+const SUPABASE_KEY = "ここにSupabaseのPublishable key";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+document.getElementById("orderForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const form = e.target;
+  const button = document.getElementById("submitButton");
+  const message = document.getElementById("message");
+
+  button.disabled = true;
+  button.textContent = "送信中...";
+  message.textContent = "";
+
+  const data = Object.fromEntries(new FormData(form).entries());
+
+  const order = {
+    customer_name: data.customer_name,
+    email: data.email,
+    phone: data.phone || null,
+    menu: data.menu,
+    budget: data.budget || null,
+    desired_date: data.desired_date || null,
+    details: data.details,
+    status: "new"
+  };
+
+  const { error } = await supabaseClient
+    .from("customer_orders")
+    .insert(order);
+
+  if (error) {
+    message.textContent = "送信できませんでした。入力内容をご確認ください。";
+    message.style.color = "red";
+    console.error(error);
+    button.disabled = false;
+    button.textContent = "注文を送信する";
+    return;
+  }
+
+  form.reset();
+  message.textContent = "ご注文を受け付けました！ありがとうございます。";
+  message.style.color = "green";
+  button.disabled = false;
+  button.textContent = "注文を送信する";
+});
+</script>
+
+</body>
+</html>
