@@ -7983,6 +7983,112 @@ render();
 })();
 </script>
 
+<script>
+(function () {
+  if (window.miraCloudAutoSyncInstalled) return;
+  window.miraCloudAutoSyncInstalled = true;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-cloud-auto-sync";
+  panel.style.cssText =
+    "max-width:960px;margin:20px auto;padding:18px;background:#f4fff8;border:1px solid #9bc9aa;border-radius:12px";
+
+  panel.innerHTML = `
+    <h2>MIRA DESIGN｜自動クラウド保存</h2>
+    <p id="mira-cloud-sync-status">
+      自動保存の準備をしています…
+    </p>
+  `;
+  document.body.appendChild(panel);
+
+  const status = document.getElementById("mira-cloud-sync-status");
+  const config = JSON.parse(
+    localStorage.getItem("mira_sb_config_v1") || "null"
+  );
+
+  if (!config || !window.supabase) {
+    status.textContent = "接続設定を確認してください。";
+    return;
+  }
+
+  const client = window.supabase.createClient(
+    config.url,
+    config.key
+  );
+
+  let timer = null;
+  let queue = Promise.resolve();
+
+  async function saveToCloud(key) {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return;
+
+    const { data, error: sessionError } =
+      await client.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    const session = data.session;
+    if (!session) throw new Error("ログインが必要です");
+
+    let payload;
+    try {
+      payload = JSON.parse(raw);
+    } catch (e) {
+      payload = { raw: raw };
+    }
+
+    const { error } = await client
+      .from("manager_records")
+      .upsert({
+        user_id: session.user.id,
+        record_type: "local_data",
+        local_id: key,
+        payload: payload
+      }, {
+        onConflict: "user_id,record_type,local_id"
+      });
+
+    if (error) throw error;
+  }
+
+  function scheduleSave(key) {
+    clearTimeout(timer);
+    status.textContent = "変更を検知しました。保存待ち…";
+
+    timer = setTimeout(function () {
+      queue = queue.then(async function () {
+        status.textContent = "クラウドへ保存しています…";
+        await saveToCloud(key);
+        status.textContent =
+          "✓ クラウド保存済み（" +
+          new Date().toLocaleTimeString("ja-JP") + "）";
+      }).catch(function (error) {
+        status.textContent =
+          "保存エラー：" + error.message;
+      });
+    }, 1200);
+  }
+
+  const originalSetItem = Storage.prototype.setItem;
+
+  Storage.prototype.setItem = function (key, value) {
+    originalSetItem.call(this, key, value);
+
+    if (
+      this === localStorage &&
+      typeof key === "string" &&
+      key.startsWith("mira_design")
+    ) {
+      scheduleSave(key);
+    }
+  };
+
+  status.textContent =
+    "✓ 自動クラウド保存が有効です。データ変更時に保存します。";
+})();
+</script>
+
 
 
 
