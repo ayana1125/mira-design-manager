@@ -875,6 +875,6083 @@ document.addEventListener("DOMContentLoaded", function () {
   render();
 })();
 </script>
+<!-- ㉑・㉒ 制作実績ギャラリー・お客様注文履歴 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_21_22";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.gallery = data.gallery || [];
+  data.history = data.history || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-21-22")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-21-22";
+  box.style.cssText =
+    "margin:25px auto;padding:20px;max-width:1000px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;color:#333;font-family:sans-serif";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉑〜㉒</h2>
+
+    <h3>㉑ 制作実績ギャラリー</h3>
+    <input id="m21-title" placeholder="作品名">
+    <input id="m21-url" placeholder="画像URL">
+    <textarea id="m21-detail" placeholder="作品の説明"></textarea>
+    <button id="m21-add">実績を登録</button>
+    <div id="m21-list"></div>
+
+    <hr>
+
+    <h3>㉒ お客様別の注文履歴</h3>
+    <input id="m22-name" placeholder="お客様名">
+    <input id="m22-order" placeholder="注文内容">
+    <input id="m22-price" type="number" placeholder="注文金額">
+    <input id="m22-date" type="date">
+    <button id="m22-add">注文履歴を登録</button>
+
+    <input id="m22-search" placeholder="お客様名で検索">
+    <div id="m22-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderGallery() {
+    const list = document.getElementById("m21-list");
+    list.innerHTML = "";
+
+    data.gallery.forEach((item, i) => {
+      const row = document.createElement("div");
+      row.style.cssText =
+        "background:white;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px";
+
+      const title = document.createElement("strong");
+      title.textContent = item.title;
+
+      const detail = document.createElement("p");
+      detail.textContent = item.detail;
+
+      row.append(title, detail);
+
+      if (item.url) {
+        const link = document.createElement("a");
+        link.href = item.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "画像を開く";
+        row.appendChild(link);
+      }
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.gallery.splice(i, 1);
+        save();
+        renderGallery();
+      };
+
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderHistory() {
+    const list = document.getElementById("m22-list");
+    const search = document.getElementById("m22-search").value
+      .trim().toLowerCase();
+
+    list.innerHTML = "";
+
+    data.history.forEach((item, i) => {
+      if (!item.name.toLowerCase().includes(search)) return;
+
+      const row = document.createElement("div");
+      row.style.cssText =
+        "background:white;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:8px";
+
+      const info = document.createElement("p");
+      info.textContent =
+        item.name + "｜" + item.order +
+        "｜¥" + Number(item.price).toLocaleString("ja-JP") +
+        "｜" + (item.date || "日付なし");
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.history.splice(i, 1);
+        save();
+        renderHistory();
+      };
+
+      row.append(info, del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m21-add").onclick = () => {
+    const title = document.getElementById("m21-title").value.trim();
+    const url = document.getElementById("m21-url").value.trim();
+    const detail = document.getElementById("m21-detail").value.trim();
+
+    if (!title) {
+      alert("作品名を入力してください");
+      return;
+    }
+
+    data.gallery.push({ title, url, detail });
+    save();
+    renderGallery();
+
+    document.getElementById("m21-title").value = "";
+    document.getElementById("m21-url").value = "";
+    document.getElementById("m21-detail").value = "";
+    alert("制作実績を登録しました！");
+  };
+
+  document.getElementById("m22-add").onclick = () => {
+    const name = document.getElementById("m22-name").value.trim();
+    const order = document.getElementById("m22-order").value.trim();
+    const price = Number(document.getElementById("m22-price").value);
+    const date = document.getElementById("m22-date").value;
+
+    if (!name || !order || price <= 0) {
+      alert("お客様名・注文内容・金額を入力してください");
+      return;
+    }
+
+    data.history.push({ name, order, price, date });
+    save();
+    renderHistory();
+
+    document.getElementById("m22-name").value = "";
+    document.getElementById("m22-order").value = "";
+    document.getElementById("m22-price").value = "";
+    document.getElementById("m22-date").value = "";
+    alert("注文履歴を登録しました！");
+  };
+
+  document.getElementById("m22-search").addEventListener(
+    "input", renderHistory
+  );
+
+  renderGallery();
+  renderHistory();
+})();
+</script>
+<!-- ㉓・㉔ 入金管理・CSV出力 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_23_24";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.payments = data.payments || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-23-24")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-23-24";
+  box.style.cssText =
+    "margin:25px auto;padding:20px;max-width:1000px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;color:#333;font-family:sans-serif";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉓〜㉔</h2>
+
+    <h3>㉓ 入金予定日・入金管理</h3>
+    <input id="m23-name" placeholder="お客様名">
+    <input id="m23-detail" placeholder="案件名・注文内容">
+    <input id="m23-price" type="number" placeholder="請求金額">
+    <input id="m23-date" type="date">
+    <select id="m23-status">
+      <option value="未入金">未入金</option>
+      <option value="入金済み">入金済み</option>
+    </select>
+    <button id="m23-add">入金予定を登録</button>
+    <div id="m23-list"></div>
+
+    <hr>
+
+    <h3>㉔ 月別データCSV出力</h3>
+    <input id="m24-month" type="month">
+    <button id="m24-export">CSVをダウンロード</button>
+    <p>㉓の入金データを月別に出力します。</p>
+  `;
+
+  document.body.appendChild(box);
+
+  function render() {
+    const list = document.getElementById("m23-list");
+    list.innerHTML = "";
+
+    data.payments.forEach((p, i) => {
+      const row = document.createElement("div");
+      row.style.cssText =
+        "background:white;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:8px";
+
+      const info = document.createElement("p");
+      info.textContent =
+        p.name + "｜" + p.detail +
+        "｜¥" + Number(p.price).toLocaleString("ja-JP") +
+        "｜予定日：" + (p.date || "未設定") +
+        "｜" + p.status;
+
+      const status = document.createElement("button");
+      status.textContent =
+        p.status === "入金済み" ? "未入金に戻す" : "入金済みにする";
+
+      status.onclick = () => {
+        p.status = p.status === "入金済み" ? "未入金" : "入金済み";
+        save();
+        render();
+      };
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.payments.splice(i, 1);
+        save();
+        render();
+      };
+
+      row.append(info, status, del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m23-add").onclick = () => {
+    const name = document.getElementById("m23-name").value.trim();
+    const detail = document.getElementById("m23-detail").value.trim();
+    const price = Number(document.getElementById("m23-price").value);
+    const date = document.getElementById("m23-date").value;
+    const status = document.getElementById("m23-status").value;
+
+    if (!name || !detail || price <= 0) {
+      alert("お客様名・注文内容・請求金額を入力してください");
+      return;
+    }
+
+    data.payments.push({ name, detail, price, date, status });
+    save();
+    render();
+
+    document.getElementById("m23-name").value = "";
+    document.getElementById("m23-detail").value = "";
+    document.getElementById("m23-price").value = "";
+    document.getElementById("m23-date").value = "";
+
+    alert("入金予定を登録しました！");
+  };
+
+  document.getElementById("m24-export").onclick = () => {
+    const month = document.getElementById("m24-month").value;
+
+    if (!month) {
+      alert("出力する年月を選択してください");
+      return;
+    }
+
+    const rows = [
+      ["お客様名", "注文内容", "請求金額", "入金予定日", "入金状況"]
+    ];
+
+    data.payments
+      .filter(p => p.date && p.date.startsWith(month))
+      .forEach(p => {
+        rows.push([p.name, p.detail, p.price, p.date, p.status]);
+      });
+
+    const csv = "\uFEFF" + rows.map(row =>
+      row.map(value =>
+        '"' + String(value ?? "").replace(/"/g, '""') + '"'
+      ).join(",")
+    ).join("\r\n");
+
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "MIRA_DESIGN_" + month + "_入金データ.csv";
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  render();
+})();
+</script>
+
+<!-- ㉕・㉖ 注文確認書・領収書発行 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_25_26";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.documents = data.documents || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-25-26")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-25-26";
+  box.style.cssText =
+    "margin:25px auto;padding:20px;max-width:1000px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;color:#333;font-family:sans-serif";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉕〜㉖</h2>
+
+    <h3>㉕ 注文確認書・㉖ 領収書</h3>
+    <input id="m25-name" placeholder="お客様名">
+    <input id="m25-title" placeholder="注文内容">
+    <input id="m25-price" type="number" placeholder="金額">
+    <input id="m25-date" type="date">
+
+    <button id="m25-order">注文確認書を発行</button>
+    <button id="m26-receipt">領収書を発行</button>
+
+    <hr>
+    <h3>発行履歴</h3>
+    <div id="m25-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function getInput() {
+    const name = document.getElementById("m25-name").value.trim();
+    const title = document.getElementById("m25-title").value.trim();
+    const price = Number(document.getElementById("m25-price").value);
+    const date = document.getElementById("m25-date").value;
+
+    if (!name || !title || price <= 0 || !date) {
+      alert("お客様名・注文内容・金額・日付を入力してください");
+      return null;
+    }
+
+    return { name, title, price, date };
+  }
+
+  function printDocument(item, type) {
+    const w = window.open("", "_blank");
+
+    if (!w) {
+      alert("ポップアップを許可してから、もう一度お試しください");
+      return;
+    }
+
+    const safe = value => String(value).replace(/[&<>"']/g, c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[c]));
+
+    const amount = Number(item.price).toLocaleString("ja-JP");
+
+    w.document.write(`
+      <!DOCTYPE html>
+      <html lang="ja">
+      <head>
+        <meta charset="UTF-8">
+        <title>${type}</title>
+        <style>
+          body { font-family: sans-serif; padding: 40px; color: #333; }
+          h1 { text-align: center; margin-bottom: 50px; }
+          .amount { font-size: 26px; font-weight: bold; }
+          .line { border-bottom: 1px solid #999; padding: 15px 0; }
+          @media print { button { display: none; } }
+        </style>
+      </head>
+      <body>
+        <h1>${type}</h1>
+        <p>${safe(item.name)} 様</p>
+        <div class="line">内容：${safe(item.title)}</div>
+        <div class="line">発行日：${safe(item.date)}</div>
+        <div class="line amount">金額：¥${amount}</div>
+        <p style="margin-top:80px">MIRA DESIGN</p>
+        <button onclick="window.print()">印刷・PDF保存</button>
+      </body>
+      </html>
+    `);
+
+    w.document.close();
+  }
+
+  function render() {
+    const list = document.getElementById("m25-list");
+    list.innerHTML = "";
+
+    data.documents.forEach(item => {
+      const row = document.createElement("p");
+      row.textContent =
+        item.type + "｜" + item.name + "｜" +
+        item.title + "｜¥" +
+        Number(item.price).toLocaleString("ja-JP");
+
+      list.appendChild(row);
+    });
+  }
+
+  function issue(type) {
+    const item = getInput();
+    if (!item) return;
+
+    printDocument(item, type);
+
+    data.documents.push({
+      ...item,
+      type,
+      createdAt: new Date().toISOString()
+    });
+
+    save();
+    render();
+  }
+
+  document.getElementById("m25-order").onclick = () =>
+    issue("注文確認書");
+
+  document.getElementById("m26-receipt").onclick = () =>
+    issue("領収書");
+
+  render();
+})();
+</script>
+
+<!-- ㉗・㉘ 顧客検索・制作カレンダー -->
+<script>
+(function () {
+  const KEY = "mira_design_features_27_28";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.customers = data.customers || [];
+  data.schedules = data.schedules || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-27-28")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-27-28";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉗〜㉘</h2>
+
+    <h3>㉗ 顧客データ検索</h3>
+    <input id="m27-name" placeholder="顧客名">
+    <input id="m27-contact" placeholder="連絡先・メール">
+    <button id="m27-add">顧客を登録</button>
+    <input id="m27-search" placeholder="顧客名・連絡先で検索">
+    <div id="m27-list"></div>
+
+    <hr>
+    <h3>㉘ 制作スケジュール</h3>
+    <input id="m28-title" placeholder="制作内容">
+    <input id="m28-date" type="date">
+    <button id="m28-add">予定を登録</button>
+    <div id="m28-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderCustomers() {
+    const q = document.getElementById("m27-search").value.toLowerCase();
+    const list = document.getElementById("m27-list");
+    list.innerHTML = "";
+
+    data.customers
+      .filter(x => (x.name + " " + x.contact).toLowerCase().includes(q))
+      .forEach((x, i) => {
+        const row = document.createElement("p");
+        row.textContent = x.name + "｜" + x.contact + " ";
+        const del = document.createElement("button");
+        del.textContent = "削除";
+        del.onclick = () => {
+          data.customers.splice(i, 1);
+          save();
+          renderCustomers();
+        };
+        row.appendChild(del);
+        list.appendChild(row);
+      });
+  }
+
+  document.getElementById("m27-add").onclick = () => {
+    const name = document.getElementById("m27-name").value.trim();
+    const contact = document.getElementById("m27-contact").value.trim();
+
+    if (!name) return alert("顧客名を入力してください");
+
+    data.customers.push({ name, contact });
+    save();
+    document.getElementById("m27-name").value = "";
+    document.getElementById("m27-contact").value = "";
+    renderCustomers();
+  };
+
+  document.getElementById("m27-search").oninput = renderCustomers;
+
+  function renderSchedules() {
+    const list = document.getElementById("m28-list");
+    list.innerHTML = "";
+
+    data.schedules
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .forEach((x, i) => {
+        const row = document.createElement("p");
+        row.textContent = x.date + "｜" + x.title + " ";
+        const del = document.createElement("button");
+        del.textContent = "削除";
+        del.onclick = () => {
+          data.schedules.splice(i, 1);
+          save();
+          renderSchedules();
+        };
+        row.appendChild(del);
+        list.appendChild(row);
+      });
+  }
+
+  document.getElementById("m28-add").onclick = () => {
+    const title = document.getElementById("m28-title").value.trim();
+    const date = document.getElementById("m28-date").value;
+
+    if (!title || !date) return alert("制作内容と日付を入力してください");
+
+    data.schedules.push({ title, date });
+    save();
+    document.getElementById("m28-title").value = "";
+    renderSchedules();
+  };
+
+  renderCustomers();
+  renderSchedules();
+})();
+</script>
+
+<!-- ㉙・㉚ 見積書・納品書 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_29_30";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.docs = data.docs || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-29-30")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-29-30";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉙〜㉚</h2>
+    <h3>見積書・納品書の発行</h3>
+    <input id="m29-name" placeholder="お客様名">
+    <input id="m29-title" placeholder="商品・制作内容">
+    <input id="m29-price" type="number" placeholder="金額">
+    <input id="m29-date" type="date">
+    <button id="m29-quote">㉙ 見積書を発行</button>
+    <button id="m30-delivery">㉚ 納品書を発行</button>
+    <hr>
+    <h3>発行履歴</h3>
+    <div id="m29-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function issue(type) {
+    const name = document.getElementById("m29-name").value.trim();
+    const title = document.getElementById("m29-title").value.trim();
+    const price = Number(document.getElementById("m29-price").value);
+    const date = document.getElementById("m29-date").value;
+
+    if (!name || !title || price <= 0 || !date) {
+      alert("すべての項目を入力してください");
+      return;
+    }
+
+    const item = { name, title, price, date, type };
+    const w = window.open("", "_blank");
+
+    if (!w) {
+      alert("ポップアップを許可してください");
+      return;
+    }
+
+    const safe = v => String(v).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;",
+      '"': "&quot;", "'": "&#39;"
+    }[c]));
+
+    w.document.write(`
+      <!DOCTYPE html>
+      <html lang="ja">
+      <head>
+        <meta charset="UTF-8">
+        <title>${type}</title>
+        <style>
+          body { font-family:sans-serif; padding:40px; color:#333; }
+          h1 { text-align:center; margin-bottom:50px; }
+          .line { padding:18px 0; border-bottom:1px solid #aaa; }
+          .price { font-size:24px; font-weight:bold; }
+          @media print { button { display:none; } }
+        </style>
+      </head>
+      <body>
+        <h1>${type}</h1>
+        <p>${safe(name)} 様</p>
+        <div class="line">内容：${safe(title)}</div>
+        <div class="line">発行日：${safe(date)}</div>
+        <div class="line price">金額：¥${price.toLocaleString("ja-JP")}</div>
+        <p style="margin-top:80px">MIRA DESIGN</p>
+        <button onclick="window.print()">印刷・PDF保存</button>
+      </body>
+      </html>
+    `);
+    w.document.close();
+
+    data.docs.push(item);
+    save();
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById("m29-list");
+    list.innerHTML = "";
+
+    data.docs.forEach(item => {
+      const p = document.createElement("p");
+      p.textContent =
+        item.type + "｜" + item.name + "｜" +
+        item.title + "｜¥" +
+        Number(item.price).toLocaleString("ja-JP");
+      list.appendChild(p);
+    });
+  }
+
+  document.getElementById("m29-quote").onclick =
+    () => issue("見積書");
+
+  document.getElementById("m30-delivery").onclick =
+    () => issue("納品書");
+
+  render();
+})();
+</script>
+
+<!-- ㉛・㉜ リピート顧客管理・月別売上グラフ -->
+<script>
+(function () {
+  const KEY = "mira_design_features_31_32";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.customers = data.customers || [];
+  data.sales = data.sales || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-31-32")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-31-32";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉛〜㉜</h2>
+
+    <h3>㉛ リピート顧客管理</h3>
+    <input id="m31-name" placeholder="顧客名">
+    <input id="m31-date" type="date">
+    <button id="m31-add">注文履歴を追加</button>
+    <div id="m31-list"></div>
+
+    <hr>
+    <h3>㉜ 月別売上グラフ</h3>
+    <input id="m32-month" type="month">
+    <input id="m32-amount" type="number" placeholder="売上金額">
+    <button id="m32-add">売上を登録</button>
+    <div id="m32-total"></div>
+    <div id="m32-chart"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderCustomers() {
+    const list = document.getElementById("m31-list");
+    list.innerHTML = "";
+
+    const counts = {};
+    data.customers.forEach(x => {
+      counts[x.name] = (counts[x.name] || 0) + 1;
+    });
+
+    Object.keys(counts).forEach(name => {
+      const p = document.createElement("p");
+      p.textContent =
+        name + "｜注文回数：" + counts[name] +
+        "回｜" + (counts[name] >= 2 ? "リピーター" : "初回");
+      list.appendChild(p);
+    });
+  }
+
+  document.getElementById("m31-add").onclick = () => {
+    const name = document.getElementById("m31-name").value.trim();
+    const date = document.getElementById("m31-date").value;
+
+    if (!name || !date) {
+      alert("顧客名と注文日を入力してください");
+      return;
+    }
+
+    data.customers.push({ name, date });
+    save();
+    document.getElementById("m31-name").value = "";
+    renderCustomers();
+  };
+
+  function renderSales() {
+    const month = document.getElementById("m32-month").value;
+    const chart = document.getElementById("m32-chart");
+    chart.innerHTML = "";
+
+    const filtered = data.sales.filter(x => x.month === month);
+    const total = filtered.reduce((sum, x) => sum + x.amount, 0);
+
+    document.getElementById("m32-total").textContent =
+      "登録売上合計：¥" + total.toLocaleString("ja-JP");
+
+    const months = {};
+    data.sales.forEach(x => {
+      months[x.month] = (months[x.month] || 0) + x.amount;
+    });
+
+    Object.keys(months).sort().forEach(m => {
+      const amount = months[m];
+      const row = document.createElement("div");
+      row.style.cssText = "margin:12px 0";
+
+      const label = document.createElement("div");
+      label.textContent =
+        m + "｜¥" + amount.toLocaleString("ja-JP");
+
+      const bar = document.createElement("div");
+      bar.style.cssText =
+        "height:18px;background:#e8c99f;border-radius:10px;width:" +
+        (Math.max(2, amount / Math.max(...Object.values(months)) * 100)) +
+        "%";
+
+      row.append(label, bar);
+      chart.appendChild(row);
+    });
+  }
+
+  document.getElementById("m32-add").onclick = () => {
+    const month = document.getElementById("m32-month").value;
+    const amount = Number(document.getElementById("m32-amount").value);
+
+    if (!month || amount <= 0) {
+      alert("年月と売上金額を入力してください");
+      return;
+    }
+
+    data.sales.push({ month, amount });
+    save();
+    document.getElementById("m32-amount").value = "";
+    renderSales();
+  };
+
+  document.getElementById("m32-month").onchange = renderSales;
+
+  renderCustomers();
+  renderSales();
+})();
+</script>
+
+<!-- ㉝・㉞ 制作依頼フォーム・お問い合わせ管理 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_33_34";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.requests = data.requests || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-33-34")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-33-34";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉝〜㉞</h2>
+
+    <h3>㉝ 制作依頼フォーム</h3>
+    <input id="m33-name" placeholder="お客様名">
+    <input id="m33-contact" placeholder="メール・連絡先">
+    <input id="m33-title" placeholder="制作したいもの">
+    <textarea id="m33-detail" placeholder="依頼内容・希望など"></textarea>
+    <button id="m33-add">依頼を登録</button>
+
+    <hr>
+    <h3>㉞ お問い合わせ管理</h3>
+    <div id="m33-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function render() {
+    const list = document.getElementById("m33-list");
+    list.innerHTML = "";
+
+    data.requests.forEach((x, i) => {
+      const card = document.createElement("div");
+      card.style.cssText =
+        "padding:12px;margin:10px 0;background:white;border:1px solid #ddd;border-radius:10px";
+
+      const title = document.createElement("strong");
+      title.textContent = x.name + "｜" + x.title;
+
+      const detail = document.createElement("p");
+      detail.textContent =
+        "連絡先：" + x.contact +
+        "\n内容：" + x.detail +
+        "\n受付日：" + x.date;
+      detail.style.whiteSpace = "pre-wrap";
+
+      const status = document.createElement("select");
+      ["未対応", "対応中", "対応済み"].forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        status.appendChild(option);
+      });
+      status.value = x.status;
+      status.onchange = () => {
+        data.requests[i].status = status.value;
+        save();
+      };
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        if (!confirm("この依頼を削除しますか？")) return;
+        data.requests.splice(i, 1);
+        save();
+        render();
+      };
+
+      card.append(title, detail, status, del);
+      list.appendChild(card);
+    });
+  }
+
+  document.getElementById("m33-add").onclick = () => {
+    const name = document.getElementById("m33-name").value.trim();
+    const contact = document.getElementById("m33-contact").value.trim();
+    const title = document.getElementById("m33-title").value.trim();
+    const detail = document.getElementById("m33-detail").value.trim();
+
+    if (!name || !title) {
+      alert("お客様名と制作内容を入力してください");
+      return;
+    }
+
+    data.requests.push({
+      name,
+      contact,
+      title,
+      detail,
+      date: new Date().toLocaleDateString("ja-JP"),
+      status: "未対応"
+    });
+
+    save();
+
+    ["m33-name", "m33-contact", "m33-title", "m33-detail"]
+      .forEach(id => document.getElementById(id).value = "");
+
+    render();
+  };
+
+  render();
+})();
+</script>
+
+<!-- ㉟・㊱ 制作時間・月別経費レポート -->
+<script>
+(function () {
+  const KEY = "mira_design_features_35_36";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.work = data.work || [];
+  data.expenses = data.expenses || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-35-36")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-35-36";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㉟〜㊱</h2>
+
+    <h3>㉟ 制作時間の記録</h3>
+    <input id="m35-title" placeholder="制作内容">
+    <input id="m35-hours" type="number" min="0.1" step="0.1" placeholder="作業時間（時間）">
+    <input id="m35-date" type="date">
+    <button id="m35-add">作業時間を登録</button>
+    <div id="m35-list"></div>
+    <p id="m35-total"></p>
+
+    <hr>
+    <h3>㊱ 月別経費レポート</h3>
+    <input id="m36-title" placeholder="経費の内容">
+    <input id="m36-amount" type="number" min="1" placeholder="金額">
+    <input id="m36-date" type="date">
+    <button id="m36-add">経費を登録</button>
+    <input id="m36-month" type="month">
+    <div id="m36-report"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderWork() {
+    const list = document.getElementById("m35-list");
+    list.innerHTML = "";
+
+    let total = 0;
+
+    data.work.forEach((x, i) => {
+      total += x.hours;
+
+      const row = document.createElement("p");
+      row.textContent =
+        x.date + "｜" + x.title + "｜" + x.hours + "時間 ";
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.work.splice(i, 1);
+        save();
+        renderWork();
+      };
+
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+
+    document.getElementById("m35-total").textContent =
+      "累計制作時間：" + total.toFixed(1) + "時間";
+  }
+
+  document.getElementById("m35-add").onclick = () => {
+    const title = document.getElementById("m35-title").value.trim();
+    const hours = Number(document.getElementById("m35-hours").value);
+    const date = document.getElementById("m35-date").value;
+
+    if (!title || hours <= 0 || !date) {
+      alert("制作内容・作業時間・日付を入力してください");
+      return;
+    }
+
+    data.work.push({ title, hours, date });
+    save();
+
+    document.getElementById("m35-title").value = "";
+    document.getElementById("m35-hours").value = "";
+    renderWork();
+  };
+
+  function renderExpenses() {
+    const month = document.getElementById("m36-month").value;
+    const report = document.getElementById("m36-report");
+    report.innerHTML = "";
+
+    const filtered = data.expenses.filter(x =>
+      x.date.slice(0, 7) === month
+    );
+
+    const total = filtered.reduce((sum, x) => sum + x.amount, 0);
+
+    const heading = document.createElement("h3");
+    heading.textContent =
+      month + "の経費合計：¥" + total.toLocaleString("ja-JP");
+    report.appendChild(heading);
+
+    filtered.forEach(x => {
+      const p = document.createElement("p");
+      p.textContent =
+        x.date + "｜" + x.title + "｜¥" +
+        x.amount.toLocaleString("ja-JP");
+      report.appendChild(p);
+    });
+  }
+
+  document.getElementById("m36-add").onclick = () => {
+    const title = document.getElementById("m36-title").value.trim();
+    const amount = Number(document.getElementById("m36-amount").value);
+    const date = document.getElementById("m36-date").value;
+
+    if (!title || amount <= 0 || !date) {
+      alert("経費内容・金額・日付を入力してください");
+      return;
+    }
+
+    data.expenses.push({ title, amount, date });
+    save();
+
+    document.getElementById("m36-title").value = "";
+    document.getElementById("m36-amount").value = "";
+    renderExpenses();
+  };
+
+  document.getElementById("m36-month").onchange = renderExpenses;
+
+  renderWork();
+  renderExpenses();
+})();
+</script>
+
+<!-- ㊲・㊳ 利益計算・月間レポート -->
+<script>
+(function () {
+  const KEY = "mira_design_features_37_38";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.records = data.records || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-37-38")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-37-38";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㊲〜㊳</h2>
+    <h3>㊲ 売上・経費の利益計算</h3>
+    <input id="m37-month" type="month">
+    <input id="m37-sales" type="number" min="0" placeholder="売上金額">
+    <input id="m37-expense" type="number" min="0" placeholder="経費金額">
+    <button id="m37-add">月の数字を登録</button>
+    <div id="m37-result"></div>
+
+    <hr>
+    <h3>㊳ 月間レポート</h3>
+    <button id="m38-print">レポートを印刷・PDF保存</button>
+  `;
+
+  document.body.appendChild(box);
+
+  function render() {
+    const month = document.getElementById("m37-month").value;
+    const record = data.records.find(x => x.month === month);
+    const result = document.getElementById("m37-result");
+    result.innerHTML = "";
+
+    if (!record) {
+      result.textContent = "この月の登録データはありません";
+      return;
+    }
+
+    const profit = record.sales - record.expense;
+
+    const lines = [
+      "対象月：" + month,
+      "売上：" + record.sales.toLocaleString("ja-JP") + "円",
+      "経費：" + record.expense.toLocaleString("ja-JP") + "円",
+      "利益：" + profit.toLocaleString("ja-JP") + "円"
+    ];
+
+    lines.forEach(line => {
+      const p = document.createElement("p");
+      p.textContent = line;
+      result.appendChild(p);
+    });
+  }
+
+  document.getElementById("m37-add").onclick = () => {
+    const month = document.getElementById("m37-month").value;
+    const sales = Number(document.getElementById("m37-sales").value);
+    const expense = Number(document.getElementById("m37-expense").value);
+
+    if (!month || sales < 0 || expense < 0 ||
+        document.getElementById("m37-sales").value === "" ||
+        document.getElementById("m37-expense").value === "") {
+      alert("年月・売上・経費を入力してください");
+      return;
+    }
+
+    const existing = data.records.find(x => x.month === month);
+
+    if (existing) {
+      existing.sales = sales;
+      existing.expense = expense;
+    } else {
+      data.records.push({ month, sales, expense });
+    }
+
+    save();
+    render();
+  };
+
+  document.getElementById("m37-month").onchange = render;
+
+  document.getElementById("m38-print").onclick = () => {
+    const month = document.getElementById("m37-month").value;
+    const record = data.records.find(x => x.month === month);
+
+    if (!record) {
+      alert("先に月の数字を登録してください");
+      return;
+    }
+
+    const w = window.open("", "_blank");
+    if (!w) {
+      alert("ポップアップを許可してください");
+      return;
+    }
+
+    const profit = record.sales - record.expense;
+
+    w.document.write(`
+      <!DOCTYPE html>
+      <html lang="ja">
+      <head>
+        <meta charset="UTF-8">
+        <title>月間レポート</title>
+        <style>
+          body { font-family:sans-serif;padding:40px;color:#333; }
+          h1 { text-align:center; }
+          p { padding:15px;border-bottom:1px solid #ddd;font-size:18px; }
+          @media print { button { display:none; } }
+        </style>
+      </head>
+      <body>
+        <h1>MIRA DESIGN 月間レポート</h1>
+        <h2>${month}</h2>
+        <p>売上：¥${record.sales.toLocaleString("ja-JP")}</p>
+        <p>経費：¥${record.expense.toLocaleString("ja-JP")}</p>
+        <p>利益：¥${profit.toLocaleString("ja-JP")}</p>
+        <button onclick="window.print()">印刷・PDF保存</button>
+      </body>
+      </html>
+    `);
+    w.document.close();
+  };
+
+  render();
+})();
+</script>
+
+<!-- ㊴・㊵ バックアップ・操作履歴 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_39_40";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.logs = data.logs || [];
+  data.backups = data.backups || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-39-40")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-39-40";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㊴〜㊵</h2>
+
+    <h3>㊴ データバックアップ</h3>
+    <button id="m39-backup">今すぐバックアップ</button>
+    <button id="m39-download">バックアップをダウンロード</button>
+    <p id="m39-status"></p>
+
+    <hr>
+    <h3>㊵ 操作履歴</h3>
+    <input id="m40-action" placeholder="操作内容">
+    <button id="m40-add">履歴を記録</button>
+    <div id="m40-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function backup() {
+    const snapshot = {
+      createdAt: new Date().toISOString(),
+      localData: {}
+    };
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("mira_design_")) {
+        snapshot.localData[key] = localStorage.getItem(key);
+      }
+    }
+
+    data.backups.push(snapshot);
+    if (data.backups.length > 10) data.backups.shift();
+
+    save();
+
+    document.getElementById("m39-status").textContent =
+      "バックアップ保存済み：" +
+      new Date().toLocaleString("ja-JP");
+  }
+
+  document.getElementById("m39-backup").onclick = backup;
+
+  document.getElementById("m39-download").onclick = () => {
+    if (!data.backups.length) {
+      alert("先にバックアップしてください");
+      return;
+    }
+
+    const blob = new Blob(
+      [JSON.stringify(data.backups[data.backups.length - 1], null, 2)],
+      { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "MIRA-DESIGN-backup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  function renderLogs() {
+    const list = document.getElementById("m40-list");
+    list.innerHTML = "";
+
+    data.logs.slice().reverse().forEach(x => {
+      const p = document.createElement("p");
+      p.textContent = x.date + "｜" + x.action;
+      list.appendChild(p);
+    });
+  }
+
+  document.getElementById("m40-add").onclick = () => {
+    const action = document.getElementById("m40-action").value.trim();
+
+    if (!action) {
+      alert("操作内容を入力してください");
+      return;
+    }
+
+    data.logs.push({
+      action,
+      date: new Date().toLocaleString("ja-JP")
+    });
+
+    save();
+    document.getElementById("m40-action").value = "";
+    renderLogs();
+  };
+
+  renderLogs();
+})();
+</script>
+
+<!-- ㊶・㊷ 売上ランキング・顧客別利益分析 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_41_42";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.records = data.records || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-41-42")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-41-42";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㊶〜㊷</h2>
+
+    <h3>㊶ 売上ランキング</h3>
+    <input id="m41-name" placeholder="商品・制作名">
+    <input id="m41-sales" type="number" min="0" placeholder="売上金額">
+    <button id="m41-add">売上を登録</button>
+    <div id="m41-list"></div>
+
+    <hr>
+    <h3>㊷ 顧客別利益分析</h3>
+    <input id="m42-name" placeholder="顧客名">
+    <input id="m42-sales" type="number" min="0" placeholder="売上金額">
+    <input id="m42-cost" type="number" min="0" placeholder="経費金額">
+    <button id="m42-add">利益を登録</button>
+    <div id="m42-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderRanking() {
+    const list = document.getElementById("m41-list");
+    list.innerHTML = "";
+
+    const totals = {};
+    data.records
+      .filter(x => x.type === "sales")
+      .forEach(x => {
+        totals[x.name] = (totals[x.name] || 0) + x.sales;
+      });
+
+    Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([name, amount], i) => {
+        const p = document.createElement("p");
+        p.textContent =
+          (i + 1) + "位｜" + name + "｜¥" +
+          amount.toLocaleString("ja-JP");
+        list.appendChild(p);
+      });
+  }
+
+  document.getElementById("m41-add").onclick = () => {
+    const name = document.getElementById("m41-name").value.trim();
+    const sales = Number(document.getElementById("m41-sales").value);
+
+    if (!name || sales <= 0) {
+      alert("商品名と売上金額を入力してください");
+      return;
+    }
+
+    data.records.push({ type: "sales", name, sales });
+    save();
+    document.getElementById("m41-name").value = "";
+    document.getElementById("m41-sales").value = "";
+    renderRanking();
+  };
+
+  function renderProfit() {
+    const list = document.getElementById("m42-list");
+    list.innerHTML = "";
+
+    data.records
+      .filter(x => x.type === "profit")
+      .forEach(x => {
+        const p = document.createElement("p");
+        const profit = x.sales - x.cost;
+        p.textContent =
+          x.name + "｜売上 ¥" + x.sales.toLocaleString("ja-JP") +
+          "｜経費 ¥" + x.cost.toLocaleString("ja-JP") +
+          "｜利益 ¥" + profit.toLocaleString("ja-JP");
+        list.appendChild(p);
+      });
+  }
+
+  document.getElementById("m42-add").onclick = () => {
+    const name = document.getElementById("m42-name").value.trim();
+    const sales = Number(document.getElementById("m42-sales").value);
+    const cost = Number(document.getElementById("m42-cost").value);
+
+    if (!name || sales < 0 || cost < 0 ||
+        document.getElementById("m42-sales").value === "" ||
+        document.getElementById("m42-cost").value === "") {
+      alert("顧客名・売上・経費を入力してください");
+      return;
+    }
+
+    data.records.push({ type: "profit", name, sales, cost });
+    save();
+
+    ["m42-name", "m42-sales", "m42-cost"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+
+    renderProfit();
+  };
+
+  renderRanking();
+  renderProfit();
+})();
+</script>
+
+<!-- ㊸・㊹ 目標達成率・キャンセル管理 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_43_44";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.goals = data.goals || [];
+  data.cancellations = data.cancellations || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-43-44")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-43-44";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㊸〜㊹</h2>
+
+    <h3>㊸ 目標達成率・実績管理</h3>
+    <input id="m43-month" type="month">
+    <input id="m43-goal" type="number" min="1" placeholder="月間目標金額">
+    <input id="m43-sales" type="number" min="0" placeholder="実績売上金額">
+    <button id="m43-add">目標・実績を保存</button>
+    <div id="m43-result"></div>
+
+    <hr>
+    <h3>㊹ 注文キャンセル管理</h3>
+    <input id="m44-name" placeholder="お客様名">
+    <input id="m44-order" placeholder="注文内容">
+    <input id="m44-reason" placeholder="キャンセル理由">
+    <input id="m44-date" type="date">
+    <button id="m44-add">キャンセルを登録</button>
+    <div id="m44-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderGoal() {
+    const month = document.getElementById("m43-month").value;
+    const item = data.goals.find(x => x.month === month);
+    const result = document.getElementById("m43-result");
+    result.innerHTML = "";
+
+    if (!item) {
+      result.textContent = "この月のデータはありません";
+      return;
+    }
+
+    const rate = item.goal > 0
+      ? Math.round(item.sales / item.goal * 100)
+      : 0;
+
+    const p = document.createElement("p");
+    p.textContent =
+      "目標：¥" + item.goal.toLocaleString("ja-JP") +
+      "｜実績：¥" + item.sales.toLocaleString("ja-JP") +
+      "｜達成率：" + rate + "%";
+
+    const bar = document.createElement("div");
+    bar.style.cssText =
+      "height:20px;background:#eee;border-radius:10px;overflow:hidden";
+
+    const fill = document.createElement("div");
+    fill.style.cssText =
+      "height:100%;background:#d8a46b;width:" +
+      Math.min(100, Math.max(0, rate)) + "%";
+
+    bar.appendChild(fill);
+    result.append(p, bar);
+  }
+
+  document.getElementById("m43-add").onclick = () => {
+    const month = document.getElementById("m43-month").value;
+    const goal = Number(document.getElementById("m43-goal").value);
+    const sales = Number(document.getElementById("m43-sales").value);
+
+    if (!month || goal <= 0 || sales < 0 ||
+        document.getElementById("m43-sales").value === "") {
+      alert("年月・目標・実績を入力してください");
+      return;
+    }
+
+    const old = data.goals.find(x => x.month === month);
+
+    if (old) {
+      old.goal = goal;
+      old.sales = sales;
+    } else {
+      data.goals.push({ month, goal, sales });
+    }
+
+    save();
+    renderGoal();
+  };
+
+  document.getElementById("m43-month").onchange = renderGoal;
+
+  function renderCancellations() {
+    const list = document.getElementById("m44-list");
+    list.innerHTML = "";
+
+    data.cancellations.forEach((x, i) => {
+      const p = document.createElement("p");
+      p.textContent =
+        x.date + "｜" + x.name + "｜" + x.order +
+        "｜理由：" + x.reason + " ";
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.cancellations.splice(i, 1);
+        save();
+        renderCancellations();
+      };
+
+      p.appendChild(del);
+      list.appendChild(p);
+    });
+  }
+
+  document.getElementById("m44-add").onclick = () => {
+    const name = document.getElementById("m44-name").value.trim();
+    const order = document.getElementById("m44-order").value.trim();
+    const reason = document.getElementById("m44-reason").value.trim();
+    const date = document.getElementById("m44-date").value;
+
+    if (!name || !order || !date) {
+      alert("お客様名・注文内容・日付を入力してください");
+      return;
+    }
+
+    data.cancellations.push({ name, order, reason, date });
+    save();
+
+    ["m44-name", "m44-order", "m44-reason", "m44-date"]
+      .forEach(id => document.getElementById(id).value = "");
+
+    renderCancellations();
+  };
+
+  renderGoal();
+  renderCancellations();
+})();
+</script>
+
+<!-- ㊺・㊻ 納期アラート・優先順位管理 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_45_46";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.tasks = data.tasks || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-45-46")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-45-46";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㊺〜㊻</h2>
+
+    <h3>㊺ 納期アラート・㊻ 優先順位管理</h3>
+    <input id="m45-title" placeholder="制作・注文内容">
+    <input id="m45-name" placeholder="お客様名">
+    <input id="m45-date" type="date">
+
+    <select id="m45-priority">
+      <option value="高">優先度：高</option>
+      <option value="中" selected>優先度：中</option>
+      <option value="低">優先度：低</option>
+    </select>
+
+    <button id="m45-add">予定を登録</button>
+    <div id="m45-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function render() {
+    const list = document.getElementById("m45-list");
+    list.innerHTML = "";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    data.tasks
+      .slice()
+      .sort((a, b) => {
+        const order = { 高: 0, 中: 1, 低: 2 };
+        return order[a.priority] - order[b.priority] ||
+          a.date.localeCompare(b.date);
+      })
+      .forEach(item => {
+        const card = document.createElement("div");
+        card.style.cssText =
+          "padding:12px;margin:10px 0;background:white;border:1px solid #ddd;border-radius:10px";
+
+        const due = new Date(item.date + "T00:00:00");
+        const diff = Math.ceil((due - today) / 86400000);
+
+        let alertText = "納期まで " + diff + " 日";
+        if (diff < 0 && !item.done) alertText = "納期超過";
+        if (diff === 0 && !item.done) alertText = "本日納期";
+        if (item.done) alertText = "完了済み";
+
+        const info = document.createElement("p");
+        info.textContent =
+          item.title + "｜" + item.name +
+          "｜納期：" + item.date +
+          "｜優先度：" + item.priority +
+          "｜" + alertText;
+
+        const status = document.createElement("button");
+        status.textContent = item.done ? "未完了に戻す" : "完了にする";
+        status.onclick = () => {
+          item.done = !item.done;
+          save();
+          render();
+        };
+
+        const del = document.createElement("button");
+        del.textContent = "削除";
+        del.onclick = () => {
+          if (!confirm("この予定を削除しますか？")) return;
+          data.tasks = data.tasks.filter(x => x.id !== item.id);
+          save();
+          render();
+        };
+
+        card.append(info, status, del);
+        list.appendChild(card);
+      });
+  }
+
+  document.getElementById("m45-add").onclick = () => {
+    const title = document.getElementById("m45-title").value.trim();
+    const name = document.getElementById("m45-name").value.trim();
+    const date = document.getElementById("m45-date").value;
+    const priority = document.getElementById("m45-priority").value;
+
+    if (!title || !date) {
+      alert("制作内容と納期を入力してください");
+      return;
+    }
+
+    data.tasks.push({
+      id: Date.now() + Math.random(),
+      title,
+      name,
+      date,
+      priority,
+      done: false
+    });
+
+    save();
+
+    ["m45-title", "m45-name", "m45-date"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+
+    render();
+  };
+
+  render();
+})();
+</script>
+
+<!-- ㊼・㊽ アンケート・制作実績管理 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_47_48";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.reviews = data.reviews || [];
+  data.completed = data.completed || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-47-48")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-47-48";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㊼〜㊽</h2>
+
+    <h3>㊼ 顧客満足度アンケート管理</h3>
+    <input id="m47-name" placeholder="お客様名">
+    <select id="m47-rating">
+      <option value="5">★★★★★ とても満足</option>
+      <option value="4">★★★★ 満足</option>
+      <option value="3">★★★ 普通</option>
+      <option value="2">★★ やや不満</option>
+      <option value="1">★ 不満</option>
+    </select>
+    <textarea id="m47-comment" placeholder="ご感想・ご意見"></textarea>
+    <button id="m47-add">アンケートを登録</button>
+    <div id="m47-list"></div>
+
+    <hr>
+    <h3>㊽ 制作実績・完了案件管理</h3>
+    <input id="m48-title" placeholder="制作実績のタイトル">
+    <input id="m48-client" placeholder="お客様名">
+    <input id="m48-date" type="date">
+    <textarea id="m48-detail" placeholder="制作内容・メモ"></textarea>
+    <button id="m48-add">完了案件を登録</button>
+    <div id="m48-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderReviews() {
+    const list = document.getElementById("m47-list");
+    list.innerHTML = "";
+
+    data.reviews.forEach((x, i) => {
+      const card = document.createElement("p");
+      card.textContent =
+        x.name + "｜" + "★".repeat(x.rating) +
+        "｜" + x.comment + " ";
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.reviews.splice(i, 1);
+        save();
+        renderReviews();
+      };
+
+      card.appendChild(del);
+      list.appendChild(card);
+    });
+  }
+
+  document.getElementById("m47-add").onclick = () => {
+    const name = document.getElementById("m47-name").value.trim();
+    const rating = Number(document.getElementById("m47-rating").value);
+    const comment = document.getElementById("m47-comment").value.trim();
+
+    if (!name) {
+      alert("お客様名を入力してください");
+      return;
+    }
+
+    data.reviews.push({ name, rating, comment });
+    save();
+
+    document.getElementById("m47-name").value = "";
+    document.getElementById("m47-comment").value = "";
+    renderReviews();
+  };
+
+  function renderCompleted() {
+    const list = document.getElementById("m48-list");
+    list.innerHTML = "";
+
+    data.completed.forEach((x, i) => {
+      const card = document.createElement("div");
+      card.style.cssText =
+        "padding:12px;margin:10px 0;background:white;border:1px solid #ddd;border-radius:10px";
+
+      const p = document.createElement("p");
+      p.textContent =
+        x.title + "｜" + x.client +
+        "｜完了日：" + x.date +
+        "｜" + x.detail;
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.completed.splice(i, 1);
+        save();
+        renderCompleted();
+      };
+
+      card.append(p, del);
+      list.appendChild(card);
+    });
+  }
+
+  document.getElementById("m48-add").onclick = () => {
+    const title = document.getElementById("m48-title").value.trim();
+    const client = document.getElementById("m48-client").value.trim();
+    const date = document.getElementById("m48-date").value;
+    const detail = document.getElementById("m48-detail").value.trim();
+
+    if (!title || !date) {
+      alert("タイトルと完了日を入力してください");
+      return;
+    }
+
+    data.completed.push({ title, client, date, detail });
+    save();
+
+    ["m48-title", "m48-client", "m48-date", "m48-detail"]
+      .forEach(id => document.getElementById(id).value = "");
+
+    renderCompleted();
+  };
+
+  renderReviews();
+  renderCompleted();
+})();
+</script>
+
+<!-- ㊾・㊿ 連絡管理・業務チェックリスト -->
+<script>
+(function () {
+  const KEY = "mira_design_features_49_50";
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+
+  data.contacts = data.contacts || [];
+  data.checks = data.checks || [];
+
+  const save = () =>
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+  if (document.getElementById("mira-extra-49-50")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-extra-49-50";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜㊾〜㊿</h2>
+
+    <h3>㊾ 顧客への連絡管理</h3>
+    <input id="m49-name" placeholder="お客様名">
+    <input id="m49-date" type="date">
+    <input id="m49-title" placeholder="連絡内容">
+    <textarea id="m49-detail" placeholder="連絡メモ"></textarea>
+    <button id="m49-add">連絡記録を登録</button>
+    <div id="m49-list"></div>
+
+    <hr>
+    <h3>㊿ 月間業務チェックリスト</h3>
+    <input id="m50-month" type="month">
+    <input id="m50-task" placeholder="やること">
+    <button id="m50-add">タスクを追加</button>
+    <div id="m50-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderContacts() {
+    const list = document.getElementById("m49-list");
+    list.innerHTML = "";
+
+    data.contacts.forEach((x, i) => {
+      const p = document.createElement("p");
+      p.textContent =
+        x.date + "｜" + x.name + "｜" +
+        x.title + "｜" + x.detail + " ";
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.contacts.splice(i, 1);
+        save();
+        renderContacts();
+      };
+
+      p.appendChild(del);
+      list.appendChild(p);
+    });
+  }
+
+  document.getElementById("m49-add").onclick = () => {
+    const name = document.getElementById("m49-name").value.trim();
+    const date = document.getElementById("m49-date").value;
+    const title = document.getElementById("m49-title").value.trim();
+    const detail = document.getElementById("m49-detail").value.trim();
+
+    if (!name || !date || !title) {
+      alert("お客様名・日付・連絡内容を入力してください");
+      return;
+    }
+
+    data.contacts.push({ name, date, title, detail });
+    save();
+
+    ["m49-name", "m49-date", "m49-title", "m49-detail"]
+      .forEach(id => document.getElementById(id).value = "");
+
+    renderContacts();
+  };
+
+  function renderChecks() {
+    const month = document.getElementById("m50-month").value;
+    const list = document.getElementById("m50-list");
+    list.innerHTML = "";
+
+    data.checks.forEach((x, i) => {
+      if (x.month !== month) return;
+
+      const row = document.createElement("div");
+      row.style.cssText = "padding:8px;border-bottom:1px solid #ddd";
+
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = x.done;
+      check.onchange = () => {
+        data.checks[i].done = check.checked;
+        save();
+        renderChecks();
+      };
+
+      const label = document.createElement("span");
+      label.textContent = " " + x.task;
+      if (x.done) label.style.textDecoration = "line-through";
+
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.checks.splice(i, 1);
+        save();
+        renderChecks();
+      };
+
+      row.append(check, label, del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m50-add").onclick = () => {
+    const month = document.getElementById("m50-month").value;
+    const task = document.getElementById("m50-task").value.trim();
+
+    if (!month || !task) {
+      alert("年月とタスクを入力してください");
+      return;
+    }
+
+    data.checks.push({ month, task, done: false });
+    save();
+    document.getElementById("m50-task").value = "";
+    renderChecks();
+  };
+
+  document.getElementById("m50-month").onchange = renderChecks;
+
+  renderContacts();
+  renderChecks();
+})();
+</script>
+
+<!-- 51・52 SNS投稿管理・デザインアイデア帳 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_51_52";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.posts = data.posts || [];
+  data.ideas = data.ideas || [];
+
+  if (document.getElementById("mira-51-52")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-51-52";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜51・52</h2>
+    <h3>51 SNS投稿スケジュール</h3>
+    <input id="m51-date" type="date">
+    <input id="m51-title" placeholder="投稿タイトル">
+    <select id="m51-status">
+      <option>投稿予定</option>
+      <option>投稿済み</option>
+    </select>
+    <button id="m51-add">投稿を登録</button>
+    <div id="m51-list"></div>
+    <hr>
+    <h3>52 デザインアイデア帳</h3>
+    <input id="m52-title" placeholder="アイデアの名前">
+    <textarea id="m52-detail" placeholder="デザインのイメージ・メモ"></textarea>
+    <button id="m52-add">アイデアを保存</button>
+    <div id="m52-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  function renderPosts() {
+    const list = document.getElementById("m51-list");
+    list.innerHTML = "";
+    data.posts.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.date + "｜" + x.title + "｜" + x.status + " ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.posts.splice(i, 1);
+        save();
+        renderPosts();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderIdeas() {
+    const list = document.getElementById("m52-list");
+    list.innerHTML = "";
+    data.ideas.forEach((x, i) => {
+      const row = document.createElement("div");
+      row.style.cssText = "padding:10px;border-bottom:1px solid #ddd";
+      const title = document.createElement("strong");
+      title.textContent = x.title;
+      const detail = document.createElement("p");
+      detail.textContent = x.detail;
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.ideas.splice(i, 1);
+        save();
+        renderIdeas();
+      };
+      row.append(title, detail, del);
+      list.appendChild(row);
+    });
+  }
+
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  document.getElementById("m51-add").onclick = () => {
+    const date = document.getElementById("m51-date").value;
+    const title = document.getElementById("m51-title").value.trim();
+    const status = document.getElementById("m51-status").value;
+    if (!date || !title) {
+      alert("日付とタイトルを入力してね");
+      return;
+    }
+    data.posts.push({ date, title, status });
+    save();
+    document.getElementById("m51-date").value = "";
+    document.getElementById("m51-title").value = "";
+    renderPosts();
+  };
+
+  document.getElementById("m52-add").onclick = () => {
+    const title = document.getElementById("m52-title").value.trim();
+    const detail = document.getElementById("m52-detail").value.trim();
+    if (!title) {
+      alert("アイデアの名前を入力してね");
+      return;
+    }
+    data.ideas.push({ title, detail });
+    save();
+    document.getElementById("m52-title").value = "";
+    document.getElementById("m52-detail").value = "";
+    renderIdeas();
+  };
+
+  renderPosts();
+  renderIdeas();
+})();
+</script>
+
+<!-- 53・54 進捗管理・集客記録 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_53_54";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.orders = data.orders || [];
+  data.visits = data.visits || [];
+
+  if (document.getElementById("mira-53-54")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-53-54";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜53・54</h2>
+    <h3>53 制作依頼の進捗一覧</h3>
+    <input id="m53-name" placeholder="お客様名">
+    <input id="m53-work" placeholder="制作内容">
+    <select id="m53-status">
+      <option>受付</option>
+      <option>制作中</option>
+      <option>確認待ち</option>
+      <option>納品済み</option>
+    </select>
+    <button id="m53-add">依頼を登録</button>
+    <div id="m53-list"></div>
+    <hr>
+    <h3>54 集客記録</h3>
+    <input id="m54-month" type="month">
+    <input id="m54-source" placeholder="集客元（X・Instagramなど）">
+    <input id="m54-count" type="number" min="0" placeholder="問い合わせ人数">
+    <button id="m54-add">記録を登録</button>
+    <div id="m54-list"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderOrders() {
+    const list = document.getElementById("m53-list");
+    list.innerHTML = "";
+    data.orders.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.name + "｜" + x.work + "｜";
+      const select = document.createElement("select");
+      ["受付", "制作中", "確認待ち", "納品済み"].forEach(s => {
+        const op = document.createElement("option");
+        op.value = s;
+        op.textContent = s;
+        select.appendChild(op);
+      });
+      select.value = x.status;
+      select.onchange = () => {
+        data.orders[i].status = select.value;
+        save();
+      };
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.orders.splice(i, 1);
+        save();
+        renderOrders();
+      };
+      row.append(select, del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderVisits() {
+    const list = document.getElementById("m54-list");
+    list.innerHTML = "";
+    data.visits.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.month + "｜" + x.source + "｜問い合わせ " + x.count + "人 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.visits.splice(i, 1);
+        save();
+        renderVisits();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m53-add").onclick = () => {
+    const name = document.getElementById("m53-name").value.trim();
+    const work = document.getElementById("m53-work").value.trim();
+    if (!name || !work) {
+      alert("お客様名と制作内容を入力してね");
+      return;
+    }
+    data.orders.push({
+      name,
+      work,
+      status: document.getElementById("m53-status").value
+    });
+    save();
+    document.getElementById("m53-name").value = "";
+    document.getElementById("m53-work").value = "";
+    renderOrders();
+  };
+
+  document.getElementById("m54-add").onclick = () => {
+    const month = document.getElementById("m54-month").value;
+    const source = document.getElementById("m54-source").value.trim();
+    const count = document.getElementById("m54-count").value;
+    if (!month || !source || count === "" || Number(count) < 0) {
+      alert("年月・集客元・人数を入力してね");
+      return;
+    }
+    data.visits.push({ month, source, count: Number(count) });
+    save();
+    document.getElementById("m54-source").value = "";
+    document.getElementById("m54-count").value = "";
+    renderVisits();
+  };
+
+  renderOrders();
+  renderVisits();
+})();
+</script>
+
+<!-- 55・56 キャンペーン・入金予定 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_55_56";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.campaigns = data.campaigns || [];
+  data.payments = data.payments || [];
+
+  if (document.getElementById("mira-55-56")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-55-56";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜55・56</h2>
+    <h3>55 キャンペーン管理</h3>
+    <input id="m55-name" placeholder="キャンペーン名">
+    <input id="m55-start" type="date">
+    <input id="m55-end" type="date">
+    <input id="m55-discount" placeholder="特典・割引内容">
+    <button id="m55-add">登録</button>
+    <div id="m55-list"></div>
+    <hr>
+    <h3>56 売上入金予定カレンダー</h3>
+    <input id="m56-name" placeholder="お客様名">
+    <input id="m56-date" type="date">
+    <input id="m56-amount" type="number" min="0" placeholder="入金予定額">
+    <button id="m56-add">入金予定を登録</button>
+    <div id="m56-list"></div>
+  `;
+
+  document.body.appendChild(box);
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderCampaigns() {
+    const list = document.getElementById("m55-list");
+    list.innerHTML = "";
+    data.campaigns.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.name + "｜" + x.start + "〜" + x.end + "｜" + x.discount + " ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.campaigns.splice(i, 1);
+        save();
+        renderCampaigns();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderPayments() {
+    const list = document.getElementById("m56-list");
+    list.innerHTML = "";
+    data.payments.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.date + "｜" + x.name + "｜" + x.amount.toLocaleString() + "円 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.payments.splice(i, 1);
+        save();
+        renderPayments();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m55-add").onclick = () => {
+    const name = document.getElementById("m55-name").value.trim();
+    const start = document.getElementById("m55-start").value;
+    const end = document.getElementById("m55-end").value;
+    const discount = document.getElementById("m55-discount").value.trim();
+    if (!name || !start || !end || !discount || end < start) {
+      alert("内容と正しい期間を入力してね");
+      return;
+    }
+    data.campaigns.push({ name, start, end, discount });
+    save();
+    document.getElementById("m55-name").value = "";
+    document.getElementById("m55-start").value = "";
+    document.getElementById("m55-end").value = "";
+    document.getElementById("m55-discount").value = "";
+    renderCampaigns();
+  };
+
+  document.getElementById("m56-add").onclick = () => {
+    const name = document.getElementById("m56-name").value.trim();
+    const date = document.getElementById("m56-date").value;
+    const amount = document.getElementById("m56-amount").value;
+    if (!name || !date || amount === "" || Number(amount) < 0) {
+      alert("お客様名・日付・金額を入力してね");
+      return;
+    }
+    data.payments.push({ name, date, amount: Number(amount) });
+    save();
+    document.getElementById("m56-name").value = "";
+    document.getElementById("m56-date").value = "";
+    document.getElementById("m56-amount").value = "";
+    renderPayments();
+  };
+
+  renderCampaigns();
+  renderPayments();
+})();
+</script>
+
+<!-- 57・58 素材管理・作業時間計算 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_57_58";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.materials = data.materials || [];
+  data.hours = data.hours || [];
+
+  if (document.getElementById("mira-57-58")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-57-58";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜57・58</h2>
+    <h3>57 デザイン素材管理</h3>
+    <input id="m57-name" placeholder="素材名">
+    <input id="m57-url" placeholder="画像・保存先URL">
+    <input id="m57-note" placeholder="メモ">
+    <button id="m57-add">素材を登録</button>
+    <div id="m57-list"></div>
+    <hr>
+    <h3>58 作業時間・時給計算</h3>
+    <input id="m58-name" placeholder="作業名">
+    <input id="m58-hours" type="number" min="0" step="0.5" placeholder="作業時間">
+    <input id="m58-rate" type="number" min="0" placeholder="時給">
+    <button id="m58-add">作業を登録</button>
+    <div id="m58-list"></div>
+    <h3 id="m58-total">合計：0円</h3>
+  `;
+
+  document.body.appendChild(box);
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderMaterials() {
+    const list = document.getElementById("m57-list");
+    list.innerHTML = "";
+    data.materials.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.name + "｜" + x.url + "｜" + x.note + " ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.materials.splice(i, 1);
+        save();
+        renderMaterials();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderHours() {
+    const list = document.getElementById("m58-list");
+    list.innerHTML = "";
+    let total = 0;
+    data.hours.forEach((x, i) => {
+      const amount = x.hours * x.rate;
+      total += amount;
+      const row = document.createElement("p");
+      row.textContent = x.name + "｜" + x.hours + "時間 × " +
+        x.rate.toLocaleString() + "円 = " + amount.toLocaleString() + "円 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.hours.splice(i, 1);
+        save();
+        renderHours();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+    document.getElementById("m58-total").textContent =
+      "合計：" + total.toLocaleString() + "円";
+  }
+
+  document.getElementById("m57-add").onclick = () => {
+    const name = document.getElementById("m57-name").value.trim();
+    const url = document.getElementById("m57-url").value.trim();
+    const note = document.getElementById("m57-note").value.trim();
+    if (!name) {
+      alert("素材名を入力してね");
+      return;
+    }
+    data.materials.push({ name, url, note });
+    save();
+    ["m57-name", "m57-url", "m57-note"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderMaterials();
+  };
+
+  document.getElementById("m58-add").onclick = () => {
+    const name = document.getElementById("m58-name").value.trim();
+    const hours = Number(document.getElementById("m58-hours").value);
+    const rate = Number(document.getElementById("m58-rate").value);
+    if (!name || !document.getElementById("m58-hours").value ||
+        !document.getElementById("m58-rate").value ||
+        hours < 0 || rate < 0) {
+      alert("作業名・時間・時給を入力してね");
+      return;
+    }
+    data.hours.push({ name, hours, rate });
+    save();
+    ["m58-name", "m58-hours", "m58-rate"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderHours();
+  };
+
+  renderMaterials();
+  renderHours();
+})();
+</script>
+
+<!-- 59・60 顧客ランキング・経費予算 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_59_60";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.sales = data.sales || [];
+  data.budgets = data.budgets || [];
+
+  if (document.getElementById("mira-59-60")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-59-60";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜59・60</h2>
+    <h3>59 顧客別売上ランキング</h3>
+    <input id="m59-name" placeholder="お客様名">
+    <input id="m59-amount" type="number" min="0" placeholder="売上金額">
+    <button id="m59-add">売上を登録</button>
+    <div id="m59-list"></div>
+    <hr>
+    <h3>60 月間経費予算管理</h3>
+    <input id="m60-month" type="month">
+    <input id="m60-budget" type="number" min="0" placeholder="月間予算">
+    <input id="m60-expense" type="number" min="0" placeholder="実際の経費">
+    <button id="m60-add">予算を登録</button>
+    <div id="m60-list"></div>
+  `;
+
+  document.body.appendChild(box);
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderSales() {
+    const list = document.getElementById("m59-list");
+    list.innerHTML = "";
+    const totals = {};
+    data.sales.forEach(x => {
+      totals[x.name] = (totals[x.name] || 0) + x.amount;
+    });
+    Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([name, amount], i) => {
+        const row = document.createElement("p");
+        row.textContent = (i + 1) + "位｜" + name + "｜" +
+          amount.toLocaleString() + "円";
+        list.appendChild(row);
+      });
+    data.sales.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.name + "｜" + x.amount.toLocaleString() + "円 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.sales.splice(i, 1);
+        save();
+        renderSales();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderBudgets() {
+    const list = document.getElementById("m60-list");
+    list.innerHTML = "";
+    data.budgets.forEach((x, i) => {
+      const diff = x.budget - x.expense;
+      const row = document.createElement("p");
+      row.textContent = x.month + "｜予算 " +
+        x.budget.toLocaleString() + "円｜経費 " +
+        x.expense.toLocaleString() + "円｜残り " +
+        diff.toLocaleString() + "円 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.budgets.splice(i, 1);
+        save();
+        renderBudgets();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m59-add").onclick = () => {
+    const name = document.getElementById("m59-name").value.trim();
+    const amount = document.getElementById("m59-amount").value;
+    if (!name || amount === "" || Number(amount) < 0) {
+      alert("お客様名と売上金額を入力してね");
+      return;
+    }
+    data.sales.push({ name, amount: Number(amount) });
+    save();
+    document.getElementById("m59-name").value = "";
+    document.getElementById("m59-amount").value = "";
+    renderSales();
+  };
+
+  document.getElementById("m60-add").onclick = () => {
+    const month = document.getElementById("m60-month").value;
+    const budget = document.getElementById("m60-budget").value;
+    const expense = document.getElementById("m60-expense").value;
+    if (!month || budget === "" || expense === "" ||
+        Number(budget) < 0 || Number(expense) < 0) {
+      alert("年月・予算・経費を入力してね");
+      return;
+    }
+    data.budgets.push({
+      month,
+      budget: Number(budget),
+      expense: Number(expense)
+    });
+    save();
+    ["m60-month", "m60-budget", "m60-expense"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderBudgets();
+  };
+
+  renderSales();
+  renderBudgets();
+})();
+</script>
+
+<!-- 61・62 制作チェック・納品管理 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_61_62";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.checks = data.checks || [];
+  data.deliveries = data.deliveries || [];
+
+  if (document.getElementById("mira-61-62")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-61-62";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜61・62</h2>
+    <h3>61 制作チェックシート</h3>
+    <input id="m61-title" placeholder="制作案件名">
+    <input id="m61-task" placeholder="確認する項目">
+    <button id="m61-add">項目を追加</button>
+    <div id="m61-list"></div>
+    <hr>
+    <h3>62 納品・完了管理</h3>
+    <input id="m62-name" placeholder="お客様名">
+    <input id="m62-work" placeholder="納品内容">
+    <input id="m62-date" type="date">
+    <select id="m62-status">
+      <option>納品予定</option>
+      <option>納品済み</option>
+    </select>
+    <button id="m62-add">納品記録を登録</button>
+    <div id="m62-list"></div>
+  `;
+
+  document.body.appendChild(box);
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderChecks() {
+    const list = document.getElementById("m61-list");
+    list.innerHTML = "";
+    data.checks.forEach((x, i) => {
+      const row = document.createElement("p");
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = x.done;
+      check.onchange = () => {
+        data.checks[i].done = check.checked;
+        save();
+      };
+      const label = document.createElement("span");
+      label.textContent = " " + x.title + "｜" + x.task;
+      if (x.done) label.style.textDecoration = "line-through";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.checks.splice(i, 1);
+        save();
+        renderChecks();
+      };
+      row.append(check, label, del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderDeliveries() {
+    const list = document.getElementById("m62-list");
+    list.innerHTML = "";
+    data.deliveries.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.date + "｜" + x.name + "｜" +
+        x.work + "｜" + x.status + " ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.deliveries.splice(i, 1);
+        save();
+        renderDeliveries();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m61-add").onclick = () => {
+    const title = document.getElementById("m61-title").value.trim();
+    const task = document.getElementById("m61-task").value.trim();
+    if (!title || !task) {
+      alert("案件名と確認項目を入力してね");
+      return;
+    }
+    data.checks.push({ title, task, done: false });
+    save();
+    document.getElementById("m61-task").value = "";
+    renderChecks();
+  };
+
+  document.getElementById("m62-add").onclick = () => {
+    const name = document.getElementById("m62-name").value.trim();
+    const work = document.getElementById("m62-work").value.trim();
+    const date = document.getElementById("m62-date").value;
+    const status = document.getElementById("m62-status").value;
+    if (!name || !work || !date) {
+      alert("お客様名・納品内容・日付を入力してね");
+      return;
+    }
+    data.deliveries.push({ name, work, date, status });
+    save();
+    ["m62-name", "m62-work", "m62-date"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderDeliveries();
+  };
+
+  renderChecks();
+  renderDeliveries();
+})();
+</script>
+
+<!-- 63・64 利益率・商品販売管理 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_63_64";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.profits = data.profits || [];
+  data.products = data.products || [];
+
+  if (document.getElementById("mira-63-64")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-63-64";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜63・64</h2>
+    <h3>63 利益率計算</h3>
+    <input id="m63-name" placeholder="案件名">
+    <input id="m63-sales" type="number" min="0" placeholder="売上金額">
+    <input id="m63-cost" type="number" min="0" placeholder="経費・原価">
+    <button id="m63-add">利益を計算・保存</button>
+    <div id="m63-list"></div>
+    <hr>
+    <h3>64 商品別販売管理</h3>
+    <input id="m64-name" placeholder="商品名">
+    <input id="m64-price" type="number" min="0" placeholder="販売価格">
+    <input id="m64-count" type="number" min="0" placeholder="販売個数">
+    <button id="m64-add">商品売上を登録</button>
+    <div id="m64-list"></div>
+  `;
+
+  document.body.appendChild(box);
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderProfits() {
+    const list = document.getElementById("m63-list");
+    list.innerHTML = "";
+    data.profits.forEach((x, i) => {
+      const profit = x.sales - x.cost;
+      const rate = x.sales > 0 ? (profit / x.sales * 100).toFixed(1) : "0.0";
+      const row = document.createElement("p");
+      row.textContent = x.name + "｜利益 " +
+        profit.toLocaleString() + "円｜利益率 " + rate + "% ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.profits.splice(i, 1);
+        save();
+        renderProfits();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderProducts() {
+    const list = document.getElementById("m64-list");
+    list.innerHTML = "";
+    data.products.forEach((x, i) => {
+      const total = x.price * x.count;
+      const row = document.createElement("p");
+      row.textContent = x.name + "｜" + x.count + "個｜売上 " +
+        total.toLocaleString() + "円 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.products.splice(i, 1);
+        save();
+        renderProducts();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m63-add").onclick = () => {
+    const name = document.getElementById("m63-name").value.trim();
+    const sales = document.getElementById("m63-sales").value;
+    const cost = document.getElementById("m63-cost").value;
+    if (!name || sales === "" || cost === "" ||
+        Number(sales) < 0 || Number(cost) < 0) {
+      alert("案件名・売上・経費を入力してね");
+      return;
+    }
+    data.profits.push({
+      name,
+      sales: Number(sales),
+      cost: Number(cost)
+    });
+    save();
+    ["m63-name", "m63-sales", "m63-cost"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderProfits();
+  };
+
+  document.getElementById("m64-add").onclick = () => {
+    const name = document.getElementById("m64-name").value.trim();
+    const price = document.getElementById("m64-price").value;
+    const count = document.getElementById("m64-count").value;
+    if (!name || price === "" || count === "" ||
+        Number(price) < 0 || Number(count) < 0) {
+      alert("商品名・価格・個数を入力してね");
+      return;
+    }
+    data.products.push({
+      name,
+      price: Number(price),
+      count: Number(count)
+    });
+    save();
+    ["m64-name", "m64-price", "m64-count"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderProducts();
+  };
+
+  renderProfits();
+  renderProducts();
+})();
+</script>
+
+<!-- 65・66 リピート注文・原価管理 -->
+<script>
+(function () {
+  const KEY = "mira_design_features_65_66";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.repeats = data.repeats || [];
+  data.costs = data.costs || [];
+
+  if (document.getElementById("mira-65-66")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-65-66";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜65・66</h2>
+    <h3>65 リピート注文管理</h3>
+    <input id="m65-name" placeholder="お客様名">
+    <input id="m65-work" placeholder="注文内容">
+    <input id="m65-date" type="date">
+    <button id="m65-add">注文を登録</button>
+    <div id="m65-list"></div>
+    <hr>
+    <h3>66 制作案件の原価・材料費管理</h3>
+    <input id="m66-work" placeholder="案件名">
+    <input id="m66-item" placeholder="材料・経費の内容">
+    <input id="m66-cost" type="number" min="0" placeholder="金額">
+    <button id="m66-add">原価を登録</button>
+    <div id="m66-list"></div>
+    <h3 id="m66-total">原価合計：0円</h3>
+  `;
+
+  document.body.appendChild(box);
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderRepeats() {
+    const list = document.getElementById("m65-list");
+    list.innerHTML = "";
+    data.repeats.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.date + "｜" + x.name + "｜" + x.work + " ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.repeats.splice(i, 1);
+        save();
+        renderRepeats();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderCosts() {
+    const list = document.getElementById("m66-list");
+    list.innerHTML = "";
+    let total = 0;
+    data.costs.forEach((x, i) => {
+      total += x.cost;
+      const row = document.createElement("p");
+      row.textContent = x.work + "｜" + x.item + "｜" +
+        x.cost.toLocaleString() + "円 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.costs.splice(i, 1);
+        save();
+        renderCosts();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+    document.getElementById("m66-total").textContent =
+      "原価合計：" + total.toLocaleString() + "円";
+  }
+
+  document.getElementById("m65-add").onclick = () => {
+    const name = document.getElementById("m65-name").value.trim();
+    const work = document.getElementById("m65-work").value.trim();
+    const date = document.getElementById("m65-date").value;
+    if (!name || !work || !date) {
+      alert("お客様名・注文内容・日付を入力してね");
+      return;
+    }
+    data.repeats.push({ name, work, date });
+    save();
+    ["m65-name", "m65-work", "m65-date"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderRepeats();
+  };
+
+  document.getElementById("m66-add").onclick = () => {
+    const work = document.getElementById("m66-work").value.trim();
+    const item = document.getElementById("m66-item").value.trim();
+    const cost = document.getElementById("m66-cost").value;
+    if (!work || !item || cost === "" || Number(cost) < 0) {
+      alert("案件名・内容・金額を入力してね");
+      return;
+    }
+    data.costs.push({ work, item, cost: Number(cost) });
+    save();
+    ["m66-work", "m66-item", "m66-cost"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderCosts();
+  };
+
+  renderRepeats();
+  renderCosts();
+})();
+</script>
+
+<!-- 67・68 顧客対応履歴・月間グラフ -->
+<script>
+(function () {
+  const KEY = "mira_design_features_67_68";
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  data.history = data.history || [];
+  data.reports = data.reports || [];
+
+  if (document.getElementById("mira-67-68")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-67-68";
+  box.style.cssText = "max-width:1000px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>MIRA DESIGN｜67・68</h2>
+    <h3>67 顧客別対応履歴</h3>
+    <input id="m67-name" placeholder="お客様名">
+    <input id="m67-date" type="date">
+    <textarea id="m67-note" placeholder="対応内容・メモ"></textarea>
+    <button id="m67-add">履歴を登録</button>
+    <div id="m67-list"></div>
+    <hr>
+    <h3>68 月間売上・利益グラフ</h3>
+    <input id="m68-month" type="month">
+    <input id="m68-sales" type="number" min="0" placeholder="売上">
+    <input id="m68-profit" type="number" placeholder="利益">
+    <button id="m68-add">月間データを登録</button>
+    <div id="m68-list"></div>
+  `;
+
+  document.body.appendChild(box);
+  const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+  function renderHistory() {
+    const list = document.getElementById("m67-list");
+    list.innerHTML = "";
+    data.history.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.date + "｜" + x.name + "｜" + x.note + " ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.history.splice(i, 1);
+        save();
+        renderHistory();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function renderReports() {
+    const list = document.getElementById("m68-list");
+    list.innerHTML = "";
+    data.reports.forEach((x, i) => {
+      const row = document.createElement("p");
+      row.textContent = x.month + "｜売上 " +
+        x.sales.toLocaleString() + "円｜利益 " +
+        x.profit.toLocaleString() + "円 ";
+      const del = document.createElement("button");
+      del.textContent = "削除";
+      del.onclick = () => {
+        data.reports.splice(i, 1);
+        save();
+        renderReports();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("m67-add").onclick = () => {
+    const name = document.getElementById("m67-name").value.trim();
+    const date = document.getElementById("m67-date").value;
+    const note = document.getElementById("m67-note").value.trim();
+    if (!name || !date || !note) {
+      alert("お客様名・日付・対応内容を入力してね");
+      return;
+    }
+    data.history.push({ name, date, note });
+    save();
+    ["m67-name", "m67-date", "m67-note"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderHistory();
+  };
+
+  document.getElementById("m68-add").onclick = () => {
+    const month = document.getElementById("m68-month").value;
+    const sales = document.getElementById("m68-sales").value;
+    const profit = document.getElementById("m68-profit").value;
+    if (!month || sales === "" || profit === "") {
+      alert("年月・売上・利益を入力してね");
+      return;
+    }
+    data.reports.push({
+      month,
+      sales: Number(sales),
+      profit: Number(profit)
+    });
+    save();
+    ["m68-month", "m68-sales", "m68-profit"].forEach(id =>
+      document.getElementById(id).value = ""
+    );
+    renderReports();
+  };
+
+  renderHistory();
+  renderReports();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_69_70";
+if(document.getElementById("mira-69-70"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.templates=d.templates||[];
+d.profile=d.profile||{name:"MIRA DESIGN",contact:"",address:""};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-69-70";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜69・70</h2>
+<h3>69 返信文テンプレート</h3>
+<input id="m69-title" placeholder="テンプレート名">
+<textarea id="m69-body" placeholder="返信文を入力"></textarea>
+<button id="m69-add">登録</button>
+<div id="m69-list"></div>
+<hr>
+<h3>70 基本情報管理</h3>
+<input id="m70-name" placeholder="屋号・名前">
+<input id="m70-contact" placeholder="連絡先">
+<textarea id="m70-address" placeholder="住所・所在地"></textarea>
+<button id="m70-save">基本情報を保存</button>
+<p id="m70-result"></p>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+const list=el("m69-list");
+list.innerHTML="";
+d.templates.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="padding:10px;margin:8px 0;background:white;border-radius:8px";
+const title=document.createElement("b");
+title.textContent=x.title;
+const body=document.createElement("p");
+body.textContent=x.body;
+const copy=document.createElement("button");
+copy.textContent="文章をコピー";
+copy.onclick=()=>{if(navigator.clipboard){navigator.clipboard.writeText(x.body).then(()=>alert("コピーしました"));}else{alert("コピーできませんでした");}};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.templates.splice(i,1);save();render();};
+div.append(title,body,copy,del);
+list.appendChild(div);
+});
+}
+el("m69-add").onclick=()=>{
+const title=el("m69-title").value.trim();
+const body=el("m69-body").value.trim();
+if(!title||!body){alert("名前と返信文を入力してね");return;}
+d.templates.push({title,body});
+save();
+el("m69-title").value="";
+el("m69-body").value="";
+render();
+};
+el("m70-name").value=d.profile.name;
+el("m70-contact").value=d.profile.contact;
+el("m70-address").value=d.profile.address;
+el("m70-save").onclick=()=>{
+d.profile={
+name:el("m70-name").value,
+contact:el("m70-contact").value,
+address:el("m70-address").value
+};
+save();
+el("m70-result").textContent="基本情報を保存しました";
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_71_72";
+if(document.getElementById("mira-71-72"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.plans=d.plans||[];
+d.notices=d.notices||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-71-72";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜71・72</h2>
+<h3>71 制作プラン・料金管理</h3>
+<input id="m71-name" placeholder="プラン名">
+<input id="m71-price" type="number" placeholder="料金（円）">
+<textarea id="m71-detail" placeholder="プラン内容"></textarea>
+<button id="m71-add">プランを登録</button>
+<div id="m71-list"></div>
+<hr>
+<h3>72 お客様へのお知らせ管理</h3>
+<input id="m72-title" placeholder="お知らせタイトル">
+<input id="m72-date" type="date">
+<textarea id="m72-body" placeholder="お知らせ内容"></textarea>
+<button id="m72-add">お知らせを登録</button>
+<div id="m72-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m71-list").innerHTML="";
+d.plans.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.price.toLocaleString()+"円｜"+x.detail+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.plans.splice(i,1);save();render();};
+p.appendChild(b);
+el("m71-list").appendChild(p);
+});
+el("m72-list").innerHTML="";
+d.notices.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.date+"｜"+x.title+"｜"+x.body+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.notices.splice(i,1);save();render();};
+p.appendChild(b);
+el("m72-list").appendChild(p);
+});
+}
+el("m71-add").onclick=()=>{
+const name=el("m71-name").value.trim();
+const price=el("m71-price").value;
+const detail=el("m71-detail").value.trim();
+if(!name||price===""){alert("プラン名と料金を入力してね");return;}
+d.plans.push({name,price:Number(price),detail});
+save();
+el("m71-name").value="";
+el("m71-price").value="";
+el("m71-detail").value="";
+render();
+};
+el("m72-add").onclick=()=>{
+const title=el("m72-title").value.trim();
+const date=el("m72-date").value;
+const body=el("m72-body").value.trim();
+if(!title||!date||!body){alert("タイトル・日付・内容を入力してね");return;}
+d.notices.push({title,date,body});
+save();
+el("m72-title").value="";
+el("m72-date").value="";
+el("m72-body").value="";
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_73_74";
+if(document.getElementById("mira-73-74"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.wait=d.wait||[];
+d.requests=d.requests||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-73-74";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜73・74</h2>
+<h3>73 キャンセル待ち管理</h3>
+<input id="m73-name" placeholder="お客様名">
+<input id="m73-date" type="date">
+<input id="m73-work" placeholder="希望する制作内容">
+<button id="m73-add">登録</button>
+<div id="m73-list"></div>
+<hr>
+<h3>74 お客様の希望・注意事項</h3>
+<input id="m74-name" placeholder="お客様名">
+<textarea id="m74-note" placeholder="デザインの希望・注意事項"></textarea>
+<button id="m74-add">登録</button>
+<div id="m74-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m73-list").innerHTML="";
+d.wait.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.date+"｜"+x.work+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.wait.splice(i,1);save();render();};
+p.appendChild(b);el("m73-list").appendChild(p);
+});
+el("m74-list").innerHTML="";
+d.requests.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.note+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.requests.splice(i,1);save();render();};
+p.appendChild(b);el("m74-list").appendChild(p);
+});
+}
+el("m73-add").onclick=()=>{
+const name=el("m73-name").value.trim();
+const date=el("m73-date").value;
+const work=el("m73-work").value.trim();
+if(!name||!date||!work){alert("すべて入力してね");return;}
+d.wait.push({name,date,work});save();
+el("m73-name").value="";
+el("m73-date").value="";
+el("m73-work").value="";
+render();
+};
+el("m74-add").onclick=()=>{
+const name=el("m74-name").value.trim();
+const note=el("m74-note").value.trim();
+if(!name||!note){alert("お客様名と内容を入力してね");return;}
+d.requests.push({name,note});save();
+el("m74-name").value="";
+el("m74-note").value="";
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_75_76";
+if(document.getElementById("mira-75-76"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.tasks=d.tasks||[];
+d.orders=d.orders||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-75-76";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜75・76</h2>
+<h3>75 制作依頼の優先順位</h3>
+<input id="m75-name" placeholder="依頼名">
+<select id="m75-level">
+<option value="高">高</option>
+<option value="中">中</option>
+<option value="低">低</option>
+</select>
+<button id="m75-add">登録</button>
+<div id="m75-list"></div>
+<hr>
+<h3>76 月間予約・受注件数</h3>
+<input id="m76-month" type="month">
+<input id="m76-count" type="number" min="0" placeholder="件数">
+<button id="m76-add">登録</button>
+<div id="m76-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m75-list").innerHTML="";
+d.tasks.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜優先度："+x.level+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.tasks.splice(i,1);save();render();};
+p.appendChild(b);el("m75-list").appendChild(p);
+});
+el("m76-list").innerHTML="";
+d.orders.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.month+"｜"+x.count+"件 ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.orders.splice(i,1);save();render();};
+p.appendChild(b);el("m76-list").appendChild(p);
+});
+}
+el("m75-add").onclick=()=>{
+const name=el("m75-name").value.trim();
+if(!name){alert("依頼名を入力してね");return;}
+d.tasks.push({name,level:el("m75-level").value});
+save();el("m75-name").value="";render();
+};
+el("m76-add").onclick=()=>{
+const month=el("m76-month").value;
+const count=el("m76-count").value;
+if(!month||count===""){alert("年月と件数を入力してね");return;}
+d.orders.push({month,count:Number(count)});
+save();el("m76-month").value="";el("m76-count").value="";render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_77_78";
+if(document.getElementById("mira-77-78"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.replies=d.replies||[];
+d.ranks=d.ranks||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-77-78";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜77・78</h2>
+<h3>77 自動返信文テンプレート</h3>
+<input id="m77-title" placeholder="返信の種類">
+<textarea id="m77-body" placeholder="返信メッセージ"></textarea>
+<button id="m77-add">登録</button>
+<div id="m77-list"></div>
+<hr>
+<h3>78 制作実績・売上ランキング</h3>
+<input id="m78-name" placeholder="制作物・作品名">
+<input id="m78-sales" type="number" min="0" placeholder="売上（円）">
+<button id="m78-add">登録</button>
+<div id="m78-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m77-list").innerHTML="";
+d.replies.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="padding:8px;background:white;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.title+"："+x.body;
+const copy=document.createElement("button");
+copy.textContent="コピー";
+copy.onclick=()=>{
+if(navigator.clipboard)navigator.clipboard.writeText(x.body).then(()=>alert("コピーしました"));
+else alert("コピーできませんでした");
+};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.replies.splice(i,1);save();render();};
+div.append(p,copy,del);
+el("m77-list").appendChild(div);
+});
+el("m78-list").innerHTML="";
+[...d.ranks].sort((a,b)=>b.sales-a.sales).forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=(i+1)+"位｜"+x.name+"｜"+x.sales.toLocaleString()+"円";
+el("m78-list").appendChild(p);
+});
+}
+el("m77-add").onclick=()=>{
+const title=el("m77-title").value.trim();
+const body=el("m77-body").value.trim();
+if(!title||!body){alert("種類と返信文を入力してね");return;}
+d.replies.push({title,body});save();
+el("m77-title").value="";el("m77-body").value="";render();
+};
+el("m78-add").onclick=()=>{
+const name=el("m78-name").value.trim();
+const sales=el("m78-sales").value;
+if(!name||sales===""){alert("作品名と売上を入力してね");return;}
+d.ranks.push({name,sales:Number(sales)});save();
+el("m78-name").value="";el("m78-sales").value="";render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_79_80";
+if(document.getElementById("mira-79-80"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.items=d.items||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-79-80";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜79・80</h2>
+<h3>79 材料・在庫管理</h3>
+<input id="m79-name" placeholder="材料・商品名">
+<input id="m79-count" type="number" min="0" placeholder="現在の在庫数">
+<input id="m79-min" type="number" min="0" placeholder="不足と判断する数量">
+<button id="m79-add">在庫を登録</button>
+<div id="m79-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+const list=el("m79-list");
+list.innerHTML="";
+d.items.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:10px;margin:8px 0;border-radius:8px";
+const p=document.createElement("p");
+p.textContent=x.name+"｜在庫 "+x.count+"個｜不足基準 "+x.min+"個";
+const status=document.createElement("b");
+status.textContent=x.count<=x.min?"⚠ 在庫不足":"在庫あり";
+status.style.color=x.count<=x.min?"#c0392b":"#27834a";
+const minus=document.createElement("button");
+minus.textContent="−1";
+minus.onclick=()=>{x.count=Math.max(0,x.count-1);save();render();};
+const plus=document.createElement("button");
+plus.textContent="+1";
+plus.onclick=()=>{x.count++;save();render();};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.items.splice(i,1);save();render();};
+div.append(p,status,document.createElement("br"),minus,plus,del);
+list.appendChild(div);
+});
+}
+el("m79-add").onclick=()=>{
+const name=el("m79-name").value.trim();
+const count=el("m79-count").value;
+const min=el("m79-min").value;
+if(!name||count===""||min===""){alert("すべて入力してね");return;}
+d.items.push({name,count:Number(count),min:Number(min)});
+save();
+el("m79-name").value="";
+el("m79-count").value="";
+el("m79-min").value="";
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_81_82";
+if(document.getElementById("mira-81-82"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.staff=d.staff||[];
+d.payments=d.payments||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-81-82";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜81・82</h2>
+<h3>81 外注・協力スタッフ管理</h3>
+<input id="m81-name" placeholder="スタッフ名">
+<input id="m81-work" placeholder="担当業務">
+<input id="m81-contact" placeholder="連絡先">
+<button id="m81-add">スタッフ登録</button>
+<div id="m81-list"></div>
+<hr>
+<h3>82 外注費・支払い管理</h3>
+<input id="m82-name" placeholder="支払先・スタッフ名">
+<input id="m82-amount" type="number" min="0" placeholder="支払金額（円）">
+<input id="m82-date" type="date">
+<button id="m82-add">支払い登録</button>
+<div id="m82-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m81-list").innerHTML="";
+d.staff.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.work+"｜"+x.contact+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.staff.splice(i,1);save();render();};
+p.appendChild(b);el("m81-list").appendChild(p);
+});
+el("m82-list").innerHTML="";
+d.payments.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="padding:8px;background:white;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.date+"｜"+x.amount.toLocaleString()+"円｜"+(x.paid?"支払済み":"未払い");
+const toggle=document.createElement("button");
+toggle.textContent=x.paid?"未払いに戻す":"支払済みにする";
+toggle.onclick=()=>{x.paid=!x.paid;save();render();};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.payments.splice(i,1);save();render();};
+div.append(p,toggle,del);el("m82-list").appendChild(div);
+});
+}
+el("m81-add").onclick=()=>{
+const name=el("m81-name").value.trim();
+const work=el("m81-work").value.trim();
+const contact=el("m81-contact").value.trim();
+if(!name){alert("スタッフ名を入力してね");return;}
+d.staff.push({name,work,contact});save();
+["m81-name","m81-work","m81-contact"].forEach(id=>el(id).value="");
+render();
+};
+el("m82-add").onclick=()=>{
+const name=el("m82-name").value.trim();
+const amount=el("m82-amount").value;
+const date=el("m82-date").value;
+if(!name||amount===""||!date){alert("すべて入力してね");return;}
+d.payments.push({name,amount:Number(amount),date,paid:false});save();
+["m82-name","m82-amount","m82-date"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_83_84";
+if(document.getElementById("mira-83-84"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.rules=d.rules||[];
+d.referrals=d.referrals||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-83-84";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜83・84</h2>
+<h3>83 契約・利用規約管理</h3>
+<input id="m83-title" placeholder="規約・契約名">
+<textarea id="m83-body" placeholder="内容・注意事項"></textarea>
+<button id="m83-add">登録</button>
+<div id="m83-list"></div>
+<hr>
+<h3>84 お客様紹介・紹介経路管理</h3>
+<input id="m84-name" placeholder="お客様名">
+<input id="m84-source" placeholder="紹介元・SNSなど">
+<input id="m84-date" type="date">
+<button id="m84-add">登録</button>
+<div id="m84-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m83-list").innerHTML="";
+d.rules.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.title+"｜"+x.body;
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.rules.splice(i,1);save();render();};
+div.append(p,b);el("m83-list").appendChild(div);
+});
+el("m84-list").innerHTML="";
+d.referrals.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.date+"｜"+x.name+"｜紹介元："+x.source+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.referrals.splice(i,1);save();render();};
+p.appendChild(b);el("m84-list").appendChild(p);
+});
+}
+el("m83-add").onclick=()=>{
+const title=el("m83-title").value.trim();
+const body=el("m83-body").value.trim();
+if(!title||!body){alert("名前と内容を入力してね");return;}
+d.rules.push({title,body});save();
+el("m83-title").value="";
+el("m83-body").value="";
+render();
+};
+el("m84-add").onclick=()=>{
+const name=el("m84-name").value.trim();
+const source=el("m84-source").value.trim();
+const date=el("m84-date").value;
+if(!name||!source||!date){alert("すべて入力してね");return;}
+d.referrals.push({name,source,date});save();
+el("m84-name").value="";
+el("m84-source").value="";
+el("m84-date").value="";
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_85_86";
+if(document.getElementById("mira-85-86"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.customers=d.customers||[];
+d.months=d.months||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-85-86";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜85・86</h2>
+<h3>85 顧客別売上・購入回数</h3>
+<input id="m85-name" placeholder="お客様名">
+<input id="m85-sales" type="number" min="0" placeholder="累計売上（円）">
+<input id="m85-count" type="number" min="0" placeholder="購入回数">
+<button id="m85-add">登録</button>
+<div id="m85-list"></div>
+<hr>
+<h3>86 月間アクセス・問い合わせ分析</h3>
+<input id="m86-month" type="month">
+<input id="m86-access" type="number" min="0" placeholder="アクセス数">
+<input id="m86-inquiry" type="number" min="0" placeholder="問い合わせ数">
+<button id="m86-add">登録</button>
+<div id="m86-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m85-list").innerHTML="";
+d.customers.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜売上 "+x.sales.toLocaleString()+"円｜購入 "+x.count+"回 ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.customers.splice(i,1);save();render();};
+p.appendChild(b);el("m85-list").appendChild(p);
+});
+el("m86-list").innerHTML="";
+d.months.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.month+"｜アクセス "+x.access+"件｜問い合わせ "+x.inquiry+"件 ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.months.splice(i,1);save();render();};
+p.appendChild(b);el("m86-list").appendChild(p);
+});
+}
+el("m85-add").onclick=()=>{
+const name=el("m85-name").value.trim();
+const sales=el("m85-sales").value;
+const count=el("m85-count").value;
+if(!name||sales===""||count===""){alert("すべて入力してね");return;}
+d.customers.push({name,sales:Number(sales),count:Number(count)});
+save();
+["m85-name","m85-sales","m85-count"].forEach(id=>el(id).value="");
+render();
+};
+el("m86-add").onclick=()=>{
+const month=el("m86-month").value;
+const access=el("m86-access").value;
+const inquiry=el("m86-inquiry").value;
+if(!month||access===""||inquiry===""){alert("すべて入力してね");return;}
+d.months.push({month,access:Number(access),inquiry:Number(inquiry)});
+save();
+["m86-month","m86-access","m86-inquiry"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_87_88";
+if(document.getElementById("mira-87-88"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.jobs=d.jobs||[];
+d.files=d.files||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-87-88";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜87・88</h2>
+<h3>87 納期・進捗管理</h3>
+<input id="m87-name" placeholder="依頼名・お客様名">
+<input id="m87-date" type="date">
+<select id="m87-status">
+<option>未着手</option><option>制作中</option><option>確認待ち</option><option>完了</option>
+</select>
+<button id="m87-add">登録</button>
+<div id="m87-list"></div>
+<hr>
+<h3>88 納品データ管理</h3>
+<input id="m88-name" placeholder="お客様名">
+<input id="m88-title" placeholder="ファイル・作品名">
+<input id="m88-url" placeholder="保存先URL">
+<button id="m88-add">登録</button>
+<div id="m88-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m87-list").innerHTML="";
+d.jobs.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜納期 "+x.date+"｜"+x.status;
+const select=document.createElement("select");
+["未着手","制作中","確認待ち","完了"].forEach(v=>{
+const o=document.createElement("option");
+o.value=v;o.textContent=v;
+if(v===x.status)o.selected=true;
+select.appendChild(o);
+});
+select.onchange=()=>{x.status=select.value;save();};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.jobs.splice(i,1);save();render();};
+div.append(p,select,del);el("m87-list").appendChild(div);
+});
+el("m88-list").innerHTML="";
+d.files.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.title;
+const a=document.createElement("a");
+a.href=x.url;a.textContent="保存先を開く";
+a.target="_blank";a.rel="noopener noreferrer";
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.files.splice(i,1);save();render();};
+div.append(p,a,document.createTextNode(" "),del);
+el("m88-list").appendChild(div);
+});
+}
+el("m87-add").onclick=()=>{
+const name=el("m87-name").value.trim();
+const date=el("m87-date").value;
+if(!name||!date){alert("依頼名と納期を入力してね");return;}
+d.jobs.push({name,date,status:el("m87-status").value});
+save();el("m87-name").value="";el("m87-date").value="";render();
+};
+el("m88-add").onclick=()=>{
+const name=el("m88-name").value.trim();
+const title=el("m88-title").value.trim();
+const url=el("m88-url").value.trim();
+if(!name||!title||!url){alert("すべて入力してね");return;}
+try{const u=new URL(url);if(!["http:","https:"].includes(u.protocol))throw 0;}
+catch(e){alert("正しいURLを入力してね");return;}
+d.files.push({name,title,url});save();
+["m88-name","m88-title","m88-url"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_89_90";
+if(document.getElementById("mira-89-90"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.costs=d.costs||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-89-90";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜89・90</h2>
+<h3>89 経費・支払い予定</h3>
+<input id="m89-name" placeholder="支払い内容">
+<input id="m89-date" type="date">
+<input id="m89-amount" type="number" min="0" placeholder="金額（円）">
+<button id="m89-add">予定を登録</button>
+<div id="m89-list"></div>
+<hr>
+<h3>90 年間売上・経費・利益集計</h3>
+<input id="m90-year" type="number" min="2000" max="2100" placeholder="西暦（例：2026）">
+<button id="m90-show">年間集計</button>
+<div id="m90-result"></div>
+<p style="font-size:12px;color:#666">※年間集計はこの画面で登録した経費と、手入力した売上を使用します。</p>
+<input id="m90-sales" type="number" min="0" placeholder="年間売上（円）">
+<button id="m90-save">売上を保存</button>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m89-list").innerHTML="";
+d.costs.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.date+"｜"+x.name+"｜"+x.amount.toLocaleString()+"円｜"+(x.paid?"支払済み":"未払い");
+const b=document.createElement("button");
+b.textContent=x.paid?"未払いに戻す":"支払済みにする";
+b.onclick=()=>{x.paid=!x.paid;save();render();};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.costs.splice(i,1);save();render();};
+div.append(p,b,del);el("m89-list").appendChild(div);
+});
+}
+el("m89-add").onclick=()=>{
+const name=el("m89-name").value.trim();
+const date=el("m89-date").value;
+const amount=el("m89-amount").value;
+if(!name||!date||amount===""){alert("すべて入力してね");return;}
+d.costs.push({name,date,amount:Number(amount),paid:false});
+save();
+["m89-name","m89-date","m89-amount"].forEach(id=>el(id).value="");
+render();
+};
+el("m90-save").onclick=()=>{
+const year=Number(el("m90-year").value);
+const sales=el("m90-sales").value;
+if(!year||sales===""){alert("年と売上を入力してね");return;}
+d.year=year;d.sales=Number(sales);save();
+alert("年間売上を保存しました");
+};
+el("m90-show").onclick=()=>{
+const year=Number(el("m90-year").value);
+if(!year){alert("年を入力してね");return;}
+const expenses=d.costs.filter(x=>x.date.startsWith(String(year))).reduce((a,x)=>a+x.amount,0);
+const sales=d.year===year?d.sales:0;
+const profit=sales-expenses;
+el("m90-result").textContent="売上："+sales.toLocaleString()+"円｜経費："+expenses.toLocaleString()+"円｜利益："+profit.toLocaleString()+"円";
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_91_92";
+if(document.getElementById("mira-91-92"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.follow=d.follow||[];
+d.points=d.points||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-91-92";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜91・92</h2>
+<h3>91 納品後フォロー管理</h3>
+<input id="m91-name" placeholder="お客様名">
+<input id="m91-date" type="date">
+<textarea id="m91-note" placeholder="フォロー内容・確認事項"></textarea>
+<button id="m91-add">登録</button>
+<div id="m91-list"></div>
+<hr>
+<h3>92 リピート特典・ポイント管理</h3>
+<input id="m92-name" placeholder="お客様名">
+<input id="m92-point" type="number" min="0" placeholder="ポイント数">
+<button id="m92-add">ポイント登録</button>
+<div id="m92-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m91-list").innerHTML="";
+d.follow.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.date+"｜"+x.note+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.follow.splice(i,1);save();render();};
+p.appendChild(b);el("m91-list").appendChild(p);
+});
+el("m92-list").innerHTML="";
+d.points.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.point+"ポイント ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.points.splice(i,1);save();render();};
+p.appendChild(b);el("m92-list").appendChild(p);
+});
+}
+el("m91-add").onclick=()=>{
+const name=el("m91-name").value.trim();
+const date=el("m91-date").value;
+const note=el("m91-note").value.trim();
+if(!name||!date||!note){alert("すべて入力してね");return;}
+d.follow.push({name,date,note});save();
+["m91-name","m91-date","m91-note"].forEach(id=>el(id).value="");
+render();
+};
+el("m92-add").onclick=()=>{
+const name=el("m92-name").value.trim();
+const point=el("m92-point").value;
+if(!name||point===""){alert("お客様名とポイントを入力してね");return;}
+d.points.push({name,point:Number(point)});save();
+el("m92-name").value="";el("m92-point").value="";
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_93_94";
+if(document.getElementById("mira-93-94"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.orders=d.orders||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-93-94";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜93・94</h2>
+<h3>93 受付番号・管理番号発行</h3>
+<input id="m93-name" placeholder="お客様名">
+<input id="m93-work" placeholder="依頼内容">
+<input id="m93-date" type="date">
+<button id="m93-add">受付番号を発行</button>
+<div id="m93-list"></div>
+<hr>
+<h3>94 対応状況ダッシュボード</h3>
+<div id="m94-summary"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m93-list").innerHTML="";
+d.orders.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:10px;margin:8px 0;border-radius:8px";
+const p=document.createElement("p");
+p.textContent=x.id+"｜"+x.name+"｜"+x.work+"｜"+x.date;
+const select=document.createElement("select");
+["受付","制作中","確認待ち","納品済み"].forEach(v=>{
+const o=document.createElement("option");
+o.value=v;o.textContent=v;
+if(x.status===v)o.selected=true;
+select.appendChild(o);
+});
+select.onchange=()=>{x.status=select.value;save();render();};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.orders.splice(i,1);save();render();};
+div.append(p,select,del);
+el("m93-list").appendChild(div);
+});
+const counts={"受付":0,"制作中":0,"確認待ち":0,"納品済み":0};
+d.orders.forEach(x=>counts[x.status]=(counts[x.status]||0)+1);
+el("m94-summary").innerHTML="";
+Object.keys(counts).forEach(k=>{
+const p=document.createElement("p");
+p.textContent=k+"："+counts[k]+"件";
+el("m94-summary").appendChild(p);
+});
+const total=document.createElement("h3");
+total.textContent="登録依頼 合計："+d.orders.length+"件";
+el("m94-summary").appendChild(total);
+}
+el("m93-add").onclick=()=>{
+const name=el("m93-name").value.trim();
+const work=el("m93-work").value.trim();
+const date=el("m93-date").value;
+if(!name||!work||!date){alert("すべて入力してね");return;}
+const id="MD-"+new Date().getFullYear()+"-"+String(Date.now()).slice(-6);
+d.orders.push({id,name,work,date,status:"受付"});
+save();
+["m93-name","m93-work","m93-date"].forEach(v=>el(v).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_95_96";
+if(document.getElementById("mira-95-96"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.simulations=d.simulations||[];
+d.products=d.products||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-95-96";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜95・96</h2>
+<h3>95 制作依頼の利益シミュレーション</h3>
+<input id="m95-name" placeholder="依頼名">
+<input id="m95-price" type="number" min="0" placeholder="販売価格（円）">
+<input id="m95-cost" type="number" min="0" placeholder="材料・外注費（円）">
+<button id="m95-add">利益を計算・保存</button>
+<div id="m95-list"></div>
+<hr>
+<h3>96 商品価格・利益率比較</h3>
+<input id="m96-name" placeholder="商品名">
+<input id="m96-price" type="number" min="0" placeholder="販売価格（円）">
+<input id="m96-cost" type="number" min="0" placeholder="原価（円）">
+<button id="m96-add">商品を登録</button>
+<div id="m96-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m95-list").innerHTML="";
+d.simulations.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜利益 "+(x.price-x.cost).toLocaleString()+"円 ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.simulations.splice(i,1);save();render();};
+p.appendChild(b);el("m95-list").appendChild(p);
+});
+el("m96-list").innerHTML="";
+d.products.forEach((x,i)=>{
+const profit=x.price-x.cost;
+const rate=x.price>0?(profit/x.price*100):0;
+const p=document.createElement("p");
+p.textContent=x.name+"｜利益 "+profit.toLocaleString()+"円｜利益率 "+rate.toFixed(1)+"% ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.products.splice(i,1);save();render();};
+p.appendChild(b);el("m96-list").appendChild(p);
+});
+}
+el("m95-add").onclick=()=>{
+const name=el("m95-name").value.trim();
+const price=el("m95-price").value;
+const cost=el("m95-cost").value;
+if(!name||price===""||cost===""){alert("すべて入力してね");return;}
+d.simulations.push({name,price:Number(price),cost:Number(cost)});
+save();
+["m95-name","m95-price","m95-cost"].forEach(id=>el(id).value="");
+render();
+};
+el("m96-add").onclick=()=>{
+const name=el("m96-name").value.trim();
+const price=el("m96-price").value;
+const cost=el("m96-cost").value;
+if(!name||price===""||cost===""){alert("すべて入力してね");return;}
+if(Number(price)<=0){alert("販売価格は1円以上にしてね");return;}
+d.products.push({name,price:Number(price),cost:Number(cost)});
+save();
+["m96-name","m96-price","m96-cost"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_97_98";
+if(document.getElementById("mira-97-98"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.sales=d.sales||[];
+d.payments=d.payments||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const s=document.createElement("section");
+s.id="mira-97-98";
+s.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+s.innerHTML=`
+<h2>MIRA DESIGN｜97・98</h2>
+<h3>97 月間売上ランキング</h3>
+<input id="m97-month" type="month">
+<input id="m97-name" placeholder="商品・制作名">
+<input id="m97-amount" type="number" min="0" placeholder="売上（円）">
+<button id="m97-add">売上を登録</button>
+<div id="m97-list"></div>
+<hr>
+<h3>98 入金確認一覧</h3>
+<input id="m98-name" placeholder="お客様名">
+<input id="m98-amount" type="number" min="0" placeholder="請求金額（円）">
+<input id="m98-date" type="date">
+<button id="m98-add">請求を登録</button>
+<div id="m98-list"></div>
+`;
+document.body.appendChild(s);
+const el=id=>document.getElementById(id);
+function render(){
+el("m97-list").innerHTML="";
+const months=[...new Set(d.sales.map(x=>x.month))].sort().reverse();
+months.forEach(month=>{
+const heading=document.createElement("h4");
+heading.textContent=month;
+el("m97-list").appendChild(heading);
+const rows=d.sales.filter(x=>x.month===month).sort((a,b)=>b.amount-a.amount);
+rows.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=(i+1)+"位｜"+x.name+"｜"+x.amount.toLocaleString()+"円 ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.sales.splice(d.sales.indexOf(x),1);save();render();};
+p.appendChild(b);el("m97-list").appendChild(p);
+});
+});
+el("m98-list").innerHTML="";
+d.payments.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜期限 "+x.date+"｜"+x.amount.toLocaleString()+"円｜"+(x.paid?"入金済み":"未入金");
+const b=document.createElement("button");
+b.textContent=x.paid?"未入金に戻す":"入金済みにする";
+b.onclick=()=>{x.paid=!x.paid;save();render();};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.payments.splice(i,1);save();render();};
+div.append(p,b,del);el("m98-list").appendChild(div);
+});
+}
+el("m97-add").onclick=()=>{
+const month=el("m97-month").value;
+const name=el("m97-name").value.trim();
+const amount=el("m97-amount").value;
+if(!month||!name||amount===""){alert("すべて入力してね");return;}
+d.sales.push({month,name,amount:Number(amount)});save();
+["m97-month","m97-name","m97-amount"].forEach(id=>el(id).value="");
+render();
+};
+el("m98-add").onclick=()=>{
+const name=el("m98-name").value.trim();
+const amount=el("m98-amount").value;
+const date=el("m98-date").value;
+if(!name||amount===""||!date){alert("すべて入力してね");return;}
+d.payments.push({name,amount:Number(amount),date,paid:false});save();
+["m98-name","m98-amount","m98-date"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_99_100";
+if(document.getElementById("mira-99-100"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+const root=document.createElement("section");
+root.id="mira-99-100";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜99・100</h2>
+<h3>99 販売手数料・利益計算</h3>
+<input id="m99-price" type="number" min="0" placeholder="販売価格（円）">
+<input id="m99-fee" type="number" min="0" max="100" step="0.1" placeholder="手数料率（％）">
+<input id="m99-cost" type="number" min="0" placeholder="材料費など（円）">
+<button id="m99-calc">利益を計算</button>
+<p id="m99-result"></p>
+<hr>
+<h3>100 税金用の積立目安</h3>
+<input id="m100-profit" type="number" min="0" placeholder="今月の利益（円）">
+<input id="m100-rate" type="number" min="0" max="100" value="20" placeholder="積立率（％）">
+<button id="m100-calc">積立目安を計算</button>
+<p id="m100-result"></p>
+<p style="font-size:12px;color:#777">※積立率は自分で設定する目安です。実際の税額を示すものではありません。</p>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+el("m99-calc").onclick=()=>{
+const p=Number(el("m99-price").value);
+const f=Number(el("m99-fee").value);
+const c=Number(el("m99-cost").value);
+if(el("m99-price").value===""||el("m99-fee").value===""||el("m99-cost").value===""||f>100||f<0){alert("正しい数値を入力してね");return;}
+const fee=p*f/100;
+const profit=p-fee-c;
+el("m99-result").textContent="手数料："+Math.round(fee).toLocaleString()+"円／利益："+Math.round(profit).toLocaleString()+"円";
+};
+el("m100-calc").onclick=()=>{
+const p=Number(el("m100-profit").value);
+const r=Number(el("m100-rate").value);
+if(el("m100-profit").value===""||el("m100-rate").value===""||r<0||r>100){alert("正しい数値を入力してね");return;}
+const reserve=p*r/100;
+el("m100-result").textContent="積立目安："+Math.round(reserve).toLocaleString()+"円／手元に残る目安："+Math.round(p-reserve).toLocaleString()+"円";
+};
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_101_102";
+if(document.getElementById("mira-101-102"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.orders=d.orders||[];
+d.goals=d.goals||{};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-101-102";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜101・102</h2>
+<h3>101 注文別利益・原価管理</h3>
+<input id="m101-name" placeholder="注文・商品名">
+<input id="m101-sales" type="number" min="0" placeholder="売上（円）">
+<input id="m101-cost" type="number" min="0" placeholder="原価（円）">
+<button id="m101-add">注文を登録</button>
+<div id="m101-list"></div>
+<hr>
+<h3>102 月間売上目標レポート</h3>
+<input id="m102-month" type="month">
+<input id="m102-sales" type="number" min="0" placeholder="今月の売上（円）">
+<input id="m102-goal" type="number" min="0" placeholder="目標売上（円）">
+<button id="m102-save">レポートを保存</button>
+<div id="m102-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m101-list").innerHTML="";
+d.orders.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜売上 "+x.sales.toLocaleString()+"円｜原価 "+x.cost.toLocaleString()+"円｜利益 "+(x.sales-x.cost).toLocaleString()+"円 ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.orders.splice(i,1);save();render();};
+p.appendChild(b);el("m101-list").appendChild(p);
+});
+el("m102-list").innerHTML="";
+Object.keys(d.goals).sort().reverse().forEach(month=>{
+const x=d.goals[month];
+const rate=x.goal>0?Math.round(x.sales/x.goal*100):0;
+const p=document.createElement("p");
+p.textContent=month+"｜売上 "+x.sales.toLocaleString()+"円／目標 "+x.goal.toLocaleString()+"円｜達成率 "+rate+"％";
+el("m102-list").appendChild(p);
+});
+}
+el("m101-add").onclick=()=>{
+const name=el("m101-name").value.trim();
+const sales=el("m101-sales").value;
+const cost=el("m101-cost").value;
+if(!name||sales===""||cost===""||Number(sales)<0||Number(cost)<0){alert("正しく入力してね");return;}
+d.orders.push({name,sales:Number(sales),cost:Number(cost)});
+save();
+["m101-name","m101-sales","m101-cost"].forEach(id=>el(id).value="");
+render();
+};
+el("m102-save").onclick=()=>{
+const month=el("m102-month").value;
+const sales=el("m102-sales").value;
+const goal=el("m102-goal").value;
+if(!month||sales===""||goal===""||Number(sales)<0||Number(goal)<0){alert("正しく入力してね");return;}
+d.goals[month]={sales:Number(sales),goal:Number(goal)};
+save();render();
+};
+render();
+})();
+</script>
+<script>
+(function(){
+const KEY="mira_design_features_103_104";
+if(document.getElementById("mira-103-104"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.cancel=d.cancel||[];
+d.months=d.months||{};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-103-104";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜103・104</h2>
+<h3>103 キャンセル・返金管理</h3>
+<input id="m103-name" placeholder="注文・お客様名">
+<input id="m103-amount" type="number" min="0" placeholder="返金額（円）">
+<input id="m103-reason" placeholder="キャンセル理由">
+<button id="m103-add">記録する</button>
+<div id="m103-list"></div>
+<hr>
+<h3>104 月別売上・利益比較</h3>
+<input id="m104-month" type="month">
+<input id="m104-sales" type="number" min="0" placeholder="売上（円）">
+<input id="m104-cost" type="number" min="0" placeholder="経費・原価（円）">
+<button id="m104-add">月別データを保存</button>
+<div id="m104-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m103-list").innerHTML="";
+d.cancel.forEach((x,i)=>{
+const p=document.createElement("p");
+p.textContent=x.name+"｜返金 "+x.amount.toLocaleString()+"円｜理由："+x.reason+" ";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.cancel.splice(i,1);save();render();};
+p.appendChild(b);el("m103-list").appendChild(p);
+});
+el("m104-list").innerHTML="";
+Object.keys(d.months).sort().reverse().forEach(month=>{
+const x=d.months[month];
+const p=document.createElement("p");
+p.textContent=month+"｜売上 "+x.sales.toLocaleString()+"円｜経費 "+x.cost.toLocaleString()+"円｜利益 "+(x.sales-x.cost).toLocaleString()+"円";
+el("m104-list").appendChild(p);
+});
+}
+el("m103-add").onclick=()=>{
+const name=el("m103-name").value.trim();
+const amount=el("m103-amount").value;
+const reason=el("m103-reason").value.trim();
+if(!name||amount===""||!reason||Number(amount)<0){alert("すべて正しく入力してね");return;}
+d.cancel.push({name,amount:Number(amount),reason});
+save();
+["m103-name","m103-amount","m103-reason"].forEach(id=>el(id).value="");
+render();
+};
+el("m104-add").onclick=()=>{
+const month=el("m104-month").value;
+const sales=el("m104-sales").value;
+const cost=el("m104-cost").value;
+if(!month||sales===""||cost===""||Number(sales)<0||Number(cost)<0){alert("正しく入力してね");return;}
+d.months[month]={sales:Number(sales),cost:Number(cost)};
+save();render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_105_106";
+if(document.getElementById("mira-105-106"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.follow=d.follow||[];
+d.tasks=d.tasks||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-105-106";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜105・106</h2>
+<h3>105 納品後フォロー管理</h3>
+<input id="m105-name" placeholder="お客様名">
+<input id="m105-date" type="date">
+<input id="m105-note" placeholder="フォロー内容・確認事項">
+<button id="m105-add">フォローを登録</button>
+<div id="m105-list"></div>
+<hr>
+<h3>106 制作依頼・担当管理</h3>
+<input id="m106-title" placeholder="制作依頼名">
+<input id="m106-person" placeholder="担当者名">
+<select id="m106-status">
+<option>未着手</option><option>制作中</option><option>確認待ち</option><option>完了</option>
+</select>
+<button id="m106-add">依頼を登録</button>
+<div id="m106-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m105-list").innerHTML="";
+d.follow.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.date+"｜"+x.note;
+const b=document.createElement("button");
+b.textContent="完了";
+b.onclick=()=>{d.follow.splice(i,1);save();render();};
+div.append(p,b);el("m105-list").appendChild(div);
+});
+el("m106-list").innerHTML="";
+d.tasks.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.title+"｜担当："+x.person+"｜"+x.status;
+const sel=document.createElement("select");
+["未着手","制作中","確認待ち","完了"].forEach(v=>{
+const o=document.createElement("option");
+o.value=v;o.textContent=v;o.selected=v===x.status;sel.appendChild(o);
+});
+sel.onchange=()=>{x.status=sel.value;save();render();};
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.tasks.splice(i,1);save();render();};
+div.append(p,sel,b);el("m106-list").appendChild(div);
+});
+}
+el("m105-add").onclick=()=>{
+const name=el("m105-name").value.trim();
+const date=el("m105-date").value;
+const note=el("m105-note").value.trim();
+if(!name||!date||!note){alert("すべて入力してね");return;}
+d.follow.push({name,date,note});save();
+["m105-name","m105-date","m105-note"].forEach(id=>el(id).value="");
+render();
+};
+el("m106-add").onclick=()=>{
+const title=el("m106-title").value.trim();
+const person=el("m106-person").value.trim();
+if(!title||!person){alert("依頼名と担当者を入力してね");return;}
+d.tasks.push({title,person,status:el("m106-status").value});
+save();
+el("m106-title").value="";
+el("m106-person").value="";
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_107_108";
+if(document.getElementById("mira-107-108"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.notes=d.notes||[];
+d.reports=d.reports||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-107-108";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜107・108</h2>
+<h3>107 お客様メモ・注意事項</h3>
+<input id="m107-name" placeholder="お客様名">
+<textarea id="m107-note" placeholder="好み・注意事項・希望など"></textarea>
+<button id="m107-add">メモを保存</button>
+<div id="m107-list"></div>
+<hr>
+<h3>108 月間業務レポート</h3>
+<input id="m108-month" type="month">
+<input id="m108-orders" type="number" min="0" placeholder="受注件数">
+<input id="m108-done" type="number" min="0" placeholder="納品件数">
+<input id="m108-hours" type="number" min="0" step="0.5" placeholder="作業時間">
+<button id="m108-add">レポートを保存</button>
+<div id="m108-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m107-list").innerHTML="";
+d.notes.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.note;
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.notes.splice(i,1);save();render();};
+div.append(p,b);el("m107-list").appendChild(div);
+});
+el("m108-list").innerHTML="";
+d.reports.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.month+"｜受注 "+x.orders+"件｜納品 "+x.done+"件｜作業 "+x.hours+"時間";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.reports.splice(i,1);save();render();};
+div.append(p,b);el("m108-list").appendChild(div);
+});
+}
+el("m107-add").onclick=()=>{
+const name=el("m107-name").value.trim();
+const note=el("m107-note").value.trim();
+if(!name||!note){alert("お客様名とメモを入力してね");return;}
+d.notes.push({name,note});save();
+el("m107-name").value="";
+el("m107-note").value="";
+render();
+};
+el("m108-add").onclick=()=>{
+const month=el("m108-month").value;
+const orders=el("m108-orders").value;
+const done=el("m108-done").value;
+const hours=el("m108-hours").value;
+if(!month||orders===""||done===""||hours===""||Number(orders)<0||Number(done)<0||Number(hours)<0){alert("正しく入力してね");return;}
+d.reports.push({month,orders:Number(orders),done:Number(done),hours:Number(hours)});
+save();
+["m108-month","m108-orders","m108-done","m108-hours"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_109_110";
+if(document.getElementById("mira-109-110"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.quotes=d.quotes||[];
+d.revisions=d.revisions||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-109-110";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜109・110</h2>
+<h3>109 見積もり・承認管理</h3>
+<input id="m109-name" placeholder="お客様名">
+<input id="m109-title" placeholder="制作内容">
+<input id="m109-price" type="number" min="0" placeholder="見積もり金額（円）">
+<select id="m109-status">
+<option>回答待ち</option><option>送付済み</option><option>承認</option><option>辞退</option>
+</select>
+<button id="m109-add">見積もりを登録</button>
+<div id="m109-list"></div>
+<hr>
+<h3>110 修正回数・内容管理</h3>
+<input id="m110-title" placeholder="制作物・注文名">
+<input id="m110-count" type="number" min="1" step="1" placeholder="修正回数">
+<textarea id="m110-note" placeholder="修正内容"></textarea>
+<button id="m110-add">修正を記録</button>
+<div id="m110-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m109-list").innerHTML="";
+d.quotes.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜"+x.title+"｜"+x.price.toLocaleString()+"円｜"+x.status;
+const sel=document.createElement("select");
+["回答待ち","送付済み","承認","辞退"].forEach(v=>{
+const o=document.createElement("option");
+o.value=v;o.textContent=v;o.selected=v===x.status;sel.appendChild(o);
+});
+sel.onchange=()=>{x.status=sel.value;save();render();};
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.quotes.splice(i,1);save();render();};
+div.append(p,sel,b);el("m109-list").appendChild(div);
+});
+el("m110-list").innerHTML="";
+d.revisions.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.title+"｜修正 "+x.count+"回｜"+x.note;
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.revisions.splice(i,1);save();render();};
+div.append(p,b);el("m110-list").appendChild(div);
+});
+}
+el("m109-add").onclick=()=>{
+const name=el("m109-name").value.trim();
+const title=el("m109-title").value.trim();
+const price=el("m109-price").value;
+if(!name||!title||price===""||Number(price)<0){alert("正しく入力してね");return;}
+d.quotes.push({name,title,price:Number(price),status:el("m109-status").value});
+save();
+["m109-name","m109-title","m109-price"].forEach(id=>el(id).value="");
+render();
+};
+el("m110-add").onclick=()=>{
+const title=el("m110-title").value.trim();
+const count=el("m110-count").value;
+const note=el("m110-note").value.trim();
+if(!title||count===""||Number(count)<1||!Number.isInteger(Number(count))||!note){alert("正しく入力してね");return;}
+d.revisions.push({title,count:Number(count),note});
+save();
+["m110-title","m110-count","m110-note"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_111_112";
+if(document.getElementById("mira-111-112"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.schedule=d.schedule||[];
+d.customers=d.customers||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-111-112";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜111・112</h2>
+<h3>111 制作スケジュール・納期管理</h3>
+<input id="m111-title" placeholder="制作内容">
+<input id="m111-date" type="date">
+<select id="m111-status"><option>予定</option><option>制作中</option><option>完了</option></select>
+<button id="m111-add">予定を登録</button>
+<div id="m111-list"></div>
+<hr>
+<h3>112 お客様別売上・利益集計</h3>
+<input id="m112-name" placeholder="お客様名">
+<input id="m112-sales" type="number" min="0" placeholder="売上（円）">
+<input id="m112-cost" type="number" min="0" placeholder="原価・経費（円）">
+<button id="m112-add">集計データを登録</button>
+<div id="m112-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m111-list").innerHTML="";
+d.schedule.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.date+"｜"+x.title+"｜"+x.status;
+const sel=document.createElement("select");
+["予定","制作中","完了"].forEach(v=>{
+const o=document.createElement("option");
+o.value=v;o.textContent=v;o.selected=v===x.status;sel.appendChild(o);
+});
+sel.onchange=()=>{x.status=sel.value;save();render();};
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.schedule.splice(d.schedule.indexOf(x),1);save();render();};
+div.append(p,sel,b);el("m111-list").appendChild(div);
+});
+el("m112-list").innerHTML="";
+d.customers.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜売上 "+x.sales.toLocaleString()+"円｜経費 "+x.cost.toLocaleString()+"円｜利益 "+(x.sales-x.cost).toLocaleString()+"円";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.customers.splice(i,1);save();render();};
+div.append(p,b);el("m112-list").appendChild(div);
+});
+}
+el("m111-add").onclick=()=>{
+const title=el("m111-title").value.trim();
+const date=el("m111-date").value;
+if(!title||!date){alert("制作内容と納期を入力してね");return;}
+d.schedule.push({title,date,status:el("m111-status").value});
+save();
+el("m111-title").value="";el("m111-date").value="";
+render();
+};
+el("m112-add").onclick=()=>{
+const name=el("m112-name").value.trim();
+const sales=el("m112-sales").value;
+const cost=el("m112-cost").value;
+if(!name||sales===""||cost===""||Number(sales)<0||Number(cost)<0){alert("正しく入力してね");return;}
+d.customers.push({name,sales:Number(sales),cost:Number(cost)});
+save();
+["m112-name","m112-sales","m112-cost"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_113_114";
+if(document.getElementById("mira-113-114"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.sns=d.sns||[];
+d.products=d.products||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-113-114";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜113・114</h2>
+<h3>113 SNS投稿・集客記録</h3>
+<input id="m113-date" type="date">
+<input id="m113-platform" placeholder="SNS名（X・Instagramなど）">
+<input id="m113-views" type="number" min="0" placeholder="閲覧数">
+<input id="m113-inquiries" type="number" min="0" placeholder="問い合わせ数">
+<button id="m113-add">投稿データを保存</button>
+<div id="m113-list"></div>
+<hr>
+<h3>114 商品・サービス販売実績</h3>
+<input id="m114-name" placeholder="商品・サービス名">
+<input id="m114-price" type="number" min="0" placeholder="販売単価（円）">
+<input id="m114-count" type="number" min="1" step="1" placeholder="販売数">
+<button id="m114-add">販売実績を登録</button>
+<div id="m114-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m113-list").innerHTML="";
+d.sns.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.date+"｜"+x.platform+"｜閲覧 "+x.views+"回｜問い合わせ "+x.inquiries+"件";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.sns.splice(i,1);save();render();};
+div.append(p,b);el("m113-list").appendChild(div);
+});
+el("m114-list").innerHTML="";
+d.products.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜単価 "+x.price.toLocaleString()+"円｜"+x.count+"個｜売上 "+(x.price*x.count).toLocaleString()+"円";
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.products.splice(i,1);save();render();};
+div.append(p,b);el("m114-list").appendChild(div);
+});
+}
+el("m113-add").onclick=()=>{
+const date=el("m113-date").value;
+const platform=el("m113-platform").value.trim();
+const views=el("m113-views").value;
+const inquiries=el("m113-inquiries").value;
+if(!date||!platform||views===""||inquiries===""||Number(views)<0||Number(inquiries)<0){alert("正しく入力してね");return;}
+d.sns.push({date,platform,views:Number(views),inquiries:Number(inquiries)});
+save();
+["m113-date","m113-platform","m113-views","m113-inquiries"].forEach(id=>el(id).value="");
+render();
+};
+el("m114-add").onclick=()=>{
+const name=el("m114-name").value.trim();
+const price=el("m114-price").value;
+const count=el("m114-count").value;
+if(!name||price===""||count===""||Number(price)<0||Number(count)<1){alert("正しく入力してね");return;}
+d.products.push({name,price:Number(price),count:Number(count)});
+save();
+["m114-name","m114-price","m114-count"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_115_116";
+if(document.getElementById("mira-115-116"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.inquiries=d.inquiries||[];
+d.months=d.months||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-115-116";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜115・116</h2>
+<h3>115 問い合わせ対応履歴</h3>
+<input id="m115-name" placeholder="お客様名">
+<input id="m115-date" type="date">
+<textarea id="m115-content" placeholder="問い合わせ内容・対応メモ"></textarea>
+<select id="m115-status"><option>未対応</option><option>対応中</option><option>対応完了</option></select>
+<button id="m115-add">履歴を登録</button>
+<div id="m115-list"></div>
+<hr>
+<h3>116 月間売上・経費・利益グラフ</h3>
+<input id="m116-month" type="month">
+<input id="m116-sales" type="number" min="0" placeholder="売上（円）">
+<input id="m116-cost" type="number" min="0" placeholder="経費（円）">
+<button id="m116-add">月別データを保存</button>
+<div id="m116-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m115-list").innerHTML="";
+d.inquiries.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.date+"｜"+x.name+"｜"+x.content;
+const sel=document.createElement("select");
+["未対応","対応中","対応完了"].forEach(v=>{
+const o=document.createElement("option");
+o.value=v;o.textContent=v;o.selected=v===x.status;sel.appendChild(o);
+});
+sel.onchange=()=>{x.status=sel.value;save();render();};
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.inquiries.splice(i,1);save();render();};
+div.append(p,sel,b);el("m115-list").appendChild(div);
+});
+el("m116-list").innerHTML="";
+const max=Math.max(1,...d.months.map(x=>x.sales),...d.months.map(x=>x.cost));
+d.months.slice().sort((a,b)=>a.month.localeCompare(b.month)).forEach((x)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.month+"｜売上 "+x.sales.toLocaleString()+"円｜経費 "+x.cost.toLocaleString()+"円｜利益 "+(x.sales-x.cost).toLocaleString()+"円";
+const bar=document.createElement("div");
+bar.style.cssText="height:14px;background:#eee;border-radius:8px;margin:5px 0;overflow:hidden";
+const fill=document.createElement("div");
+fill.style.cssText="height:14px;background:#d88c45;width:"+(x.sales/max*100)+"%";
+bar.appendChild(fill);
+div.append(p,bar);el("m116-list").appendChild(div);
+});
+}
+el("m115-add").onclick=()=>{
+const name=el("m115-name").value.trim();
+const date=el("m115-date").value;
+const content=el("m115-content").value.trim();
+if(!name||!date||!content){alert("すべて入力してね");return;}
+d.inquiries.push({name,date,content,status:el("m115-status").value});
+save();
+["m115-name","m115-date","m115-content"].forEach(id=>el(id).value="");
+render();
+};
+el("m116-add").onclick=()=>{
+const month=el("m116-month").value;
+const sales=el("m116-sales").value;
+const cost=el("m116-cost").value;
+if(!month||sales===""||cost===""||Number(sales)<0||Number(cost)<0){alert("正しく入力してね");return;}
+const old=d.months.find(x=>x.month===month);
+if(old){old.sales=Number(sales);old.cost=Number(cost);}
+else d.months.push({month,sales:Number(sales),cost:Number(cost)});
+save();
+["m116-month","m116-sales","m116-cost"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_117_118";
+if(document.getElementById("mira-117-118"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.files=d.files||[];
+d.reminders=d.reminders||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-117-118";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜117・118</h2>
+<h3>117 制作ファイル管理</h3>
+<input id="m117-title" placeholder="制作物の名前">
+<input id="m117-url" type="url" placeholder="ファイルURL">
+<input id="m117-note" placeholder="メモ">
+<button id="m117-add">ファイルを登録</button>
+<div id="m117-list"></div>
+<hr>
+<h3>118 対応期限・リマインダー</h3>
+<input id="m118-name" placeholder="お客様・作業名">
+<input id="m118-date" type="date">
+<input id="m118-note" placeholder="対応内容">
+<button id="m118-add">期限を登録</button>
+<div id="m118-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m117-list").innerHTML="";
+d.files.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.title+"｜"+x.note;
+div.appendChild(p);
+const a=document.createElement("a");
+a.textContent="ファイルを開く";
+a.href=x.url;a.target="_blank";a.rel="noopener noreferrer";
+div.appendChild(a);
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.files.splice(i,1);save();render();};
+div.appendChild(b);el("m117-list").appendChild(div);
+});
+el("m118-list").innerHTML="";
+d.reminders.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.date+"｜"+x.name+"｜"+x.note;
+const b=document.createElement("button");
+b.textContent=x.done?"未完了に戻す":"対応完了";
+b.onclick=()=>{x.done=!x.done;save();render();};
+const del=document.createElement("button");
+del.textContent="削除";
+del.onclick=()=>{d.reminders.splice(d.reminders.indexOf(x),1);save();render();};
+div.append(p,b,del);el("m118-list").appendChild(div);
+});
+}
+el("m117-add").onclick=()=>{
+const title=el("m117-title").value.trim();
+const url=el("m117-url").value.trim();
+const note=el("m117-note").value.trim();
+try{
+const u=new URL(url);
+if(!["https:","http:"].includes(u.protocol))throw Error();
+}catch(e){alert("正しいファイルURLを入力してね");return;}
+if(!title){alert("制作物の名前を入力してね");return;}
+d.files.push({title,url,note});save();
+["m117-title","m117-url","m117-note"].forEach(id=>el(id).value="");
+render();
+};
+el("m118-add").onclick=()=>{
+const name=el("m118-name").value.trim();
+const date=el("m118-date").value;
+const note=el("m118-note").value.trim();
+if(!name||!date||!note){alert("すべて入力してね");return;}
+d.reminders.push({name,date,note,done:false});save();
+["m118-name","m118-date","m118-note"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_119_120";
+if(document.getElementById("mira-119-120"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.incomes=d.incomes||[];
+d.coupons=d.coupons||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-119-120";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜119・120</h2>
+<h3>119 入金・未入金管理</h3>
+<input id="m119-name" placeholder="お客様名">
+<input id="m119-month" type="month">
+<input id="m119-amount" type="number" min="0" placeholder="請求金額（円）">
+<select id="m119-status"><option>未入金</option><option>入金済み</option></select>
+<button id="m119-add">入金記録を登録</button>
+<div id="m119-list"></div>
+<hr>
+<h3>120 クーポン・割引管理</h3>
+<input id="m120-name" placeholder="クーポン名">
+<input id="m120-code" placeholder="クーポンコード">
+<input id="m120-rate" type="number" min="0" max="100" placeholder="割引率（％）">
+<input id="m120-date" type="date">
+<button id="m120-add">クーポンを登録</button>
+<div id="m120-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m119-list").innerHTML="";
+d.incomes.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.month+"｜"+x.name+"｜"+x.amount.toLocaleString()+"円｜"+x.status;
+const sel=document.createElement("select");
+["未入金","入金済み"].forEach(v=>{
+const o=document.createElement("option");
+o.value=v;o.textContent=v;o.selected=v===x.status;sel.appendChild(o);
+});
+sel.onchange=()=>{x.status=sel.value;save();render();};
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.incomes.splice(i,1);save();render();};
+div.append(p,sel,b);el("m119-list").appendChild(div);
+});
+el("m120-list").innerHTML="";
+d.coupons.forEach((x,i)=>{
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:8px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=x.name+"｜コード "+x.code+"｜"+x.rate+"％割引｜期限 "+x.date;
+const b=document.createElement("button");
+b.textContent="削除";
+b.onclick=()=>{d.coupons.splice(i,1);save();render();};
+div.append(p,b);el("m120-list").appendChild(div);
+});
+}
+el("m119-add").onclick=()=>{
+const name=el("m119-name").value.trim();
+const month=el("m119-month").value;
+const amount=el("m119-amount").value;
+if(!name||!month||amount===""||Number(amount)<0){alert("正しく入力してね");return;}
+d.incomes.push({name,month,amount:Number(amount),status:el("m119-status").value});
+save();
+["m119-name","m119-month","m119-amount"].forEach(id=>el(id).value="");
+render();
+};
+el("m120-add").onclick=()=>{
+const name=el("m120-name").value.trim();
+const code=el("m120-code").value.trim();
+const rate=el("m120-rate").value;
+const date=el("m120-date").value;
+if(!name||!code||rate===""||!date||Number(rate)<0||Number(rate)>100){alert("正しく入力してね");return;}
+d.coupons.push({name,code,rate:Number(rate),date});
+save();
+["m120-name","m120-code","m120-rate","m120-date"].forEach(id=>el(id).value="");
+render();
+};
+render();
+})();
+</script>
+
+<script>
+(function(){
+const KEY="mira_design_features_121_122";
+if(document.getElementById("mira-121-122"))return;
+let d={};
+try{d=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+d.orders=d.orders||[];
+d.goals=d.goals||{};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(d));
+const root=document.createElement("section");
+root.id="mira-121-122";
+root.style.cssText="max-width:900px;margin:25px auto;padding:20px;background:#fff8ef;border:1px solid #e8c99f;border-radius:15px;font-family:sans-serif";
+root.innerHTML=`
+<h2>MIRA DESIGN｜121・122</h2>
+<h3>121 お客様別注文回数管理</h3>
+<input id="m121-name" placeholder="お客様名">
+<input id="m121-date" type="date">
+<input id="m121-amount" type="number" min="0" placeholder="注文金額（円）">
+<button id="m121-add">注文を登録</button>
+<div id="m121-list"></div>
+<hr>
+<h3>122 月間売上目標ダッシュボード</h3>
+<input id="m122-month" type="month">
+<input id="m122-sales" type="number" min="0" placeholder="現在の売上（円）">
+<input id="m122-goal" type="number" min="1" placeholder="目標売上（円）">
+<button id="m122-save">目標を保存</button>
+<div id="m122-list"></div>
+`;
+document.body.appendChild(root);
+const el=id=>document.getElementById(id);
+function render(){
+el("m121-list").innerHTML="";
+const names=[...new Set(d.orders.map(x=>x.name))];
+names.forEach(name=>{
+const rows=d.orders.filter(x=>x.name===name);
+const total=rows.reduce((a,x)=>a+x.amount,0);
+const p=document.createElement("p");
+p.textContent=name+"｜注文 "+rows.length+"回｜累計 "+total.toLocaleString()+"円";
+el("m121-list").appendChild(p);
+});
+el("m122-list").innerHTML="";
+Object.keys(d.goals).sort().reverse().forEach(month=>{
+const x=d.goals[month];
+const rate=Math.round(x.sales/x.goal*100);
+const div=document.createElement("div");
+div.style.cssText="background:white;padding:10px;margin:8px 0";
+const p=document.createElement("p");
+p.textContent=month+"｜売上 "+x.sales.toLocaleString()+"円／目標 "+x.goal.toLocaleString()+"円｜達成率 "+rate+"％";
+const bar=document.createElement("div");
+bar.style.cssText="height:15px;background:#eee;border-radius:8px;overflow:hidden";
+const fill=document.createElement("div");
+fill.style.cssText="height:15px;background:#d88c45;width:"+Math.min(100,rate)+"%";
+bar.appendChild(fill);div.append(p,bar);
+el("m122-list").appendChild(div);
+});
+}
+el("m121-add").onclick=()=>{
+const name=el("m121-name").value.trim();
+const date=el("m121-date").value;
+const amount=el("m121-amount").value;
+if(!name||!date||amount===""||Number(amount)<0){alert("正しく入力してね");return;}
+d.orders.push({name,date,amount:Number(amount)});
+save();
+["m121-name","m121-date","m121-amount"].forEach(id=>el(id).value="");
+render();
+};
+el("m122-save").onclick=()=>{
+const month=el("m122-month").value;
+const sales=el("m122-sales").value;
+const goal=el("m122-goal").value;
+if(!month||sales===""||goal===""||Number(sales)<0||Number(goal)<=0){alert("正しく入力してね");return;}
+d.goals[month]={sales:Number(sales),goal:Number(goal)};
+save();render();
+};
+render();
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-safe-backup-123")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-safe-backup-123";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #e6a15c;border-radius:14px;background:#fff8ef;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>🔐 MIRA DESIGN データバックアップ</h2>
+    <p>この端末に保存されているMIRA DESIGNのデータを保存できます。</p>
+    <button id="mira-backup-export"
+      style="padding:12px 18px;background:#d98236;color:white;border:0;border-radius:8px">
+      バックアップをダウンロード
+    </button>
+    <p id="mira-backup-status" style="font-size:13px"></p>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-backup-export")
+    .addEventListener("click", function () {
+      const data = {};
+      let count = 0;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("mira_design")) {
+          data[key] = localStorage.getItem(key);
+          count++;
+        }
+      }
+
+      if (!count) {
+        document.getElementById("mira-backup-status").textContent =
+          "保存対象のデータが見つかりませんでした。";
+        return;
+      }
+
+      const blob = new Blob(
+        [JSON.stringify({
+          createdAt: new Date().toISOString(),
+          data: data
+        }, null, 2)],
+        { type: "application/json" }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mira-design-backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+
+      document.getElementById("mira-backup-status").textContent =
+        count + "件のデータをバックアップしました。";
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-restore-124")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-restore-124";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #8ca6d9;border-radius:14px;background:#f3f6ff;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>📂 MIRA DESIGN バックアップ復元</h2>
+    <p>以前保存したJSONバックアップを選択して復元できます。</p>
+    <input type="file" id="mira-restore-file" accept=".json,application/json">
+    <button id="mira-restore-button"
+      style="display:block;margin-top:12px;padding:12px 18px;background:#5276b8;color:white;border:0;border-radius:8px">
+      バックアップを復元
+    </button>
+    <p id="mira-restore-status"></p>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-restore-button")
+    .addEventListener("click", async function () {
+      const file = document.getElementById("mira-restore-file").files[0];
+      const status = document.getElementById("mira-restore-status");
+
+      if (!file) {
+        status.textContent = "先にバックアップファイルを選択してね。";
+        return;
+      }
+
+      try {
+        const backup = JSON.parse(await file.text());
+
+        if (!backup.data || typeof backup.data !== "object" ||
+            Array.isArray(backup.data)) {
+          throw new Error("形式が正しくありません");
+        }
+
+        const entries = Object.entries(backup.data);
+        if (!entries.length || entries.some(([key, value]) =>
+          !key.startsWith("mira_design") || typeof value !== "string")) {
+          throw new Error("復元対象のデータが正しくありません");
+        }
+
+        if (!confirm(
+          entries.length + "件のデータを復元します。既存の同じキーのデータは上書きされます。続けますか？"
+        )) return;
+
+        entries.forEach(([key, value]) => localStorage.setItem(key, value));
+
+        status.textContent =
+          entries.length + "件を復元しました。画面を再読み込みしてください。";
+      } catch (error) {
+        status.textContent = "復元できませんでした。バックアップファイルを確認してね。";
+      }
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-data-check-125")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-data-check-125";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #86b9a0;border-radius:14px;background:#f1faf5;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>📊 MIRA DESIGN データ確認</h2>
+    <button id="mira-data-check-button"
+      style="padding:12px 18px;background:#398866;color:white;border:0;border-radius:8px">
+      保存データを確認する
+    </button>
+    <div id="mira-data-check-result" style="margin-top:12px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-data-check-button")
+    .addEventListener("click", function () {
+      const result = document.getElementById("mira-data-check-result");
+      const keys = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("mira_design")) keys.push(key);
+      }
+
+      keys.sort();
+
+      result.innerHTML = `
+        <p><strong>保存されているデータ数：</strong>${keys.length}件</p>
+        <ul>${keys.map(key =>
+          "<li>" + key.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;") + "</li>"
+        ).join("")}</ul>
+      `;
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-storage-126")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-storage-126";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #b39bd3;border-radius:14px;background:#f8f4ff;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>💾 MIRA DESIGN 保存容量チェック</h2>
+    <button id="mira-storage-check"
+      style="padding:12px 18px;background:#8060aa;color:white;border:0;border-radius:8px">
+      容量を確認する
+    </button>
+    <p id="mira-storage-result"></p>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-storage-check")
+    .addEventListener("click", function () {
+      let bytes = 0;
+      let count = 0;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("mira_design")) {
+          const value = localStorage.getItem(key) || "";
+          bytes += new Blob([key + value]).size;
+          count++;
+        }
+      }
+
+      const kb = (bytes / 1024).toFixed(2);
+      const mb = (bytes / (1024 * 1024)).toFixed(3);
+
+      document.getElementById("mira-storage-result").textContent =
+        "対象データ：" + count + "件 ／ 使用量：約" + kb +
+        " KB（" + mb + " MB）";
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-integrity-127")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-integrity-127";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #d6ad69;border-radius:14px;background:#fffaf0;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>🛠️ MIRA DESIGN データ整合性チェック</h2>
+    <button id="mira-integrity-run"
+      style="padding:12px 18px;background:#b47b2e;color:white;border:0;border-radius:8px">
+      チェックを実行
+    </button>
+    <div id="mira-integrity-result" style="margin-top:12px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-integrity-run")
+    .addEventListener("click", function () {
+      const result = document.getElementById("mira-integrity-result");
+      let checked = 0;
+      const problems = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith("mira_design")) continue;
+
+        checked++;
+        const value = localStorage.getItem(key);
+
+        if (value === null) {
+          problems.push(key + "：データを読み取れません");
+          continue;
+        }
+
+        try {
+          JSON.parse(value);
+        } catch (error) {
+          problems.push(key + "：JSON形式ではありません");
+        }
+      }
+
+      if (problems.length) {
+        result.innerHTML =
+          "<p>確認したデータ：" + checked + "件</p>" +
+          "<p>形式を確認できないデータ：" + problems.length + "件</p>" +
+          "<ul>" + problems.map(p =>
+            "<li>" + p.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;") + "</li>"
+          ).join("") + "</ul>";
+      } else {
+        result.textContent =
+          checked + "件を確認しました。JSON形式のエラーは見つかりませんでした。";
+      }
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-system-check-128")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-system-check-128";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #83a9c9;border-radius:14px;background:#f2f8ff;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>🩺 MIRA DESIGN システム診断</h2>
+    <button id="mira-system-check-run"
+      style="padding:12px 18px;background:#397cae;color:white;border:0;border-radius:8px">
+      システムを診断する
+    </button>
+    <div id="mira-system-check-result" style="margin-top:12px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-system-check-run")
+    .addEventListener("click", function () {
+      const result = document.getElementById("mira-system-check-result");
+
+      const checks = [
+        ["JavaScript", typeof window !== "undefined"],
+        ["localStorage", typeof localStorage !== "undefined"],
+        ["JSON機能", typeof JSON.parse === "function"],
+        ["Blob機能", typeof Blob !== "undefined"],
+        ["ダウンロード機能", typeof URL.createObjectURL === "function"]
+      ];
+
+      const passed = checks.filter(item => item[1]).length;
+
+      result.innerHTML =
+        "<p>診断結果：" + passed + " / " + checks.length + " 項目OK</p>" +
+        "<ul>" + checks.map(item =>
+          "<li>" + (item[1] ? "✅ " : "❌ ") +
+          item[0] + "</li>"
+        ).join("") + "</ul>" +
+        "<p>※ブラウザの基本機能を確認しています。全機能の動作保証ではありません。</p>";
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-history-129")) return;
+
+  const KEY = "mira_design_operation_history";
+  const panel = document.createElement("section");
+
+  panel.id = "mira-history-129";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #91b9a5;border-radius:14px;background:#f3faf5;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>📋 MIRA DESIGN 操作履歴</h2>
+    <input id="mira-history-text" placeholder="記録する内容"
+      style="width:100%;padding:10px;box-sizing:border-box">
+    <button id="mira-history-add"
+      style="margin-top:10px;padding:10px 16px;background:#438968;color:white;border:0;border-radius:8px">
+      履歴を記録
+    </button>
+    <ul id="mira-history-list"></ul>
+  `;
+
+  document.body.appendChild(panel);
+
+  function load() {
+    try {
+      return JSON.parse(localStorage.getItem(KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function render() {
+    const list = document.getElementById("mira-history-list");
+    list.replaceChildren();
+
+    load().slice().reverse().forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item.date + " ：" + item.message;
+      list.appendChild(li);
+    });
+  }
+
+  document.getElementById("mira-history-add")
+    .addEventListener("click", function () {
+      const input = document.getElementById("mira-history-text");
+      const message = input.value.trim();
+
+      if (!message) {
+        alert("記録内容を入力してね。");
+        return;
+      }
+
+      const history = load();
+      history.push({
+        date: new Date().toLocaleString("ja-JP"),
+        message: message
+      });
+
+      localStorage.setItem(KEY, JSON.stringify(history.slice(-100)));
+      input.value = "";
+      render();
+    });
+
+  render();
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-update-130")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-update-130";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #c5a0cf;border-radius:14px;background:#fbf5ff;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>🕒 データ更新日時</h2>
+    <p>この画面で更新日時を記録できます。</p>
+    <button id="mira-update-save"
+      style="padding:12px 18px;background:#87569a;color:white;border:0;border-radius:8px">
+      今の日時を記録
+    </button>
+    <p id="mira-update-result"></p>
+  `;
+
+  document.body.appendChild(panel);
+
+  const KEY = "mira_design_last_manual_update";
+  const result = document.getElementById("mira-update-result");
+
+  function show() {
+    const saved = localStorage.getItem(KEY);
+    result.textContent = saved
+      ? "最後に記録した日時：" + saved
+      : "まだ日時は記録されていません。";
+  }
+
+  document.getElementById("mira-update-save")
+    .addEventListener("click", function () {
+      localStorage.setItem(KEY, new Date().toLocaleString("ja-JP"));
+      show();
+    });
+
+  show();
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-data-list-131")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-data-list-131";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #8eacc7;border-radius:14px;background:#f3f8fc;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>📁 MIRA DESIGN 保存データ一覧</h2>
+    <button id="mira-data-list-run"
+      style="padding:12px 18px;background:#527fa5;color:white;border:0;border-radius:8px">
+      一覧を表示
+    </button>
+    <div id="mira-data-list-result" style="margin-top:12px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-data-list-run")
+    .addEventListener("click", function () {
+      const result = document.getElementById("mira-data-list-result");
+      result.replaceChildren();
+
+      const heading = document.createElement("p");
+      const keys = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("mira_design")) keys.push(key);
+      }
+
+      heading.textContent = "保存データ：" + keys.length + "件";
+      result.appendChild(heading);
+
+      const list = document.createElement("ul");
+      keys.sort().forEach(key => {
+        const item = document.createElement("li");
+        item.textContent = key;
+        list.appendChild(item);
+      });
+
+      result.appendChild(list);
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-data-search-132")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-data-search-132";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #d3a0a0;border-radius:14px;background:#fff6f6;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>🔎 MIRA DESIGN 保存データ検索</h2>
+    <input id="mira-data-search-input" placeholder="保存データ名で検索"
+      style="width:100%;padding:10px;box-sizing:border-box">
+    <button id="mira-data-search-run"
+      style="margin-top:10px;padding:12px 18px;background:#a85e5e;color:white;border:0;border-radius:8px">
+      検索する
+    </button>
+    <ul id="mira-data-search-result"></ul>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-data-search-run")
+    .addEventListener("click", function () {
+      const query = document.getElementById("mira-data-search-input")
+        .value.trim().toLowerCase();
+      const result = document.getElementById("mira-data-search-result");
+      result.replaceChildren();
+
+      let found = 0;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith("mira_design")) continue;
+        if (!key.toLowerCase().includes(query)) continue;
+
+        const li = document.createElement("li");
+        li.textContent = key;
+        result.appendChild(li);
+        found++;
+      }
+
+      if (!found) {
+        const li = document.createElement("li");
+        li.textContent = "該当するデータはありません。";
+        result.appendChild(li);
+      }
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-data-count-133")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-data-count-133";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #8bb8ae;border-radius:14px;background:#f2faf8;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>📊 保存データ件数集計</h2>
+    <button id="mira-data-count-run"
+      style="padding:12px 18px;background:#408b7d;color:white;border:0;border-radius:8px">
+      件数を集計する
+    </button>
+    <div id="mira-data-count-result" style="margin-top:12px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-data-count-run")
+    .addEventListener("click", function () {
+      let count = 0;
+      let total = 0;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith("mira_design")) continue;
+
+        count++;
+        total += new Blob([
+          key,
+          localStorage.getItem(key) || ""
+        ]).size;
+      }
+
+      document.getElementById("mira-data-count-result").textContent =
+        "保存データ数：" + count + "件 ／ 合計サイズ：約" +
+        (total / 1024).toFixed(2) + " KB";
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-data-csv-134")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-data-csv-134";
+  panel.style.cssText =
+    "margin:20px;padding:18px;border:2px solid #83b69a;border-radius:14px;background:#f3faf4;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>📥 MIRA DESIGN データCSV出力</h2>
+    <p>保存されているデータ名と内容をCSVで出力できます。</p>
+    <button id="mira-data-csv-export"
+      style="padding:12px 18px;background:#39865b;color:white;border:0;border-radius:8px">
+      CSVをダウンロード
+    </button>
+    <p id="mira-data-csv-status"></p>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-data-csv-export")
+    .addEventListener("click", function () {
+      const rows = [["データ名", "保存内容"]];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith("mira_design")) continue;
+
+        rows.push([key, localStorage.getItem(key) || ""]);
+      }
+
+      if (rows.length === 1) {
+        document.getElementById("mira-data-csv-status").textContent =
+          "出力できるデータがありません。";
+        return;
+      }
+
+      const csv = "\uFEFF" + rows.map(row =>
+        row.map(value =>
+          '"' + String(value).replace(/"/g, '""') + '"'
+        ).join(",")
+      ).join("\r\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mira-design-data.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+
+      document.getElementById("mira-data-csv-status").textContent =
+        (rows.length - 1) + "件のデータをCSV出力しました。";
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-integration-135")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-integration-135";
+  panel.style.cssText = `
+    margin:20px;padding:20px;border:2px solid #d6a36d;
+    border-radius:16px;background:#fff9f1;color:#333;
+    font-family:sans-serif;
+  `;
+
+  panel.innerHTML = `
+    <h2>🌷 MIRA DESIGN 統合管理</h2>
+    <p>基本管理データの保存状況をまとめて確認できます。</p>
+    <button id="mira-integration-check"
+      style="padding:12px 18px;background:#bd8047;color:white;border:0;border-radius:8px">
+      データを確認する
+    </button>
+    <div id="mira-integration-result" style="margin-top:15px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-integration-check")
+    .addEventListener("click", function () {
+      const result = document.getElementById("mira-integration-result");
+      const key = "mira_design_manager_v1";
+      const raw = localStorage.getItem(key);
+
+      if (!raw) {
+        result.textContent =
+          "基本管理データが見つかりません。元の管理画面で保存状況を確認してください。";
+        return;
+      }
+
+      try {
+        const data = JSON.parse(raw);
+
+        const sections = [
+          ["顧客", data.customers],
+          ["注文", data.orders],
+          ["経費", data.expenses],
+          ["売上", data.sales],
+          ["請求書", data.invoices]
+        ];
+
+        result.replaceChildren();
+
+        sections.forEach(([name, value]) => {
+          const p = document.createElement("p");
+          p.textContent = name + "：" +
+            (Array.isArray(value) ? value.length + "件" :
+            value && typeof value === "object" ?
+            Object.keys(value).length + "項目" : "データなし");
+          result.appendChild(p);
+        });
+
+        const note = document.createElement("p");
+        note.textContent =
+          "※この画面は元データを読み取って表示します。変更・削除は行いません。";
+        result.appendChild(note);
+
+      } catch (error) {
+        result.textContent =
+          "基本管理データを読み取れませんでした。元データを確認してください。";
+      }
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-order-sales-136")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-order-sales-136";
+  panel.style.cssText =
+    "margin:20px;padding:20px;border:2px solid #8eb6a0;border-radius:16px;background:#f3faf5;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>💰 注文データ・売上集計</h2>
+    <button id="mira-order-sales-run"
+      style="padding:12px 18px;background:#438765;color:white;border:0;border-radius:8px">
+      注文売上を集計する
+    </button>
+    <div id="mira-order-sales-result" style="margin-top:15px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-order-sales-run")
+    .addEventListener("click", function () {
+      const result = document.getElementById("mira-order-sales-result");
+
+      try {
+        const raw = localStorage.getItem("mira_design_manager_v1");
+        if (!raw) {
+          result.textContent = "基本管理データが見つかりません。";
+          return;
+        }
+
+        const data = JSON.parse(raw);
+        const orders = Array.isArray(data.orders) ? data.orders : [];
+
+        const total = orders.reduce((sum, order) => {
+          const amount = Number(
+            order.amount ?? order.price ?? order.total ?? 0
+          );
+          return sum + (Number.isFinite(amount) ? amount : 0);
+        }, 0);
+
+        result.replaceChildren();
+
+        const count = document.createElement("p");
+        count.textContent = "注文件数：" + orders.length + "件";
+
+        const sales = document.createElement("p");
+        sales.textContent = "注文金額合計：" +
+          total.toLocaleString("ja-JP") + "円";
+
+        const note = document.createElement("p");
+        note.textContent =
+          "※注文データ内の amount・price・total の値を集計しています。実際の売上確定額とは異なる場合があります。";
+
+        result.append(count, sales, note);
+      } catch (error) {
+        result.textContent = "注文データを読み取れませんでした。";
+      }
+    });
+})();
+</script>
+
+<script>
+(function () {
+  if (document.getElementById("mira-payment-check-137")) return;
+
+  const panel = document.createElement("section");
+  panel.id = "mira-payment-check-137";
+  panel.style.cssText =
+    "margin:20px;padding:20px;border:2px solid #8aaacb;border-radius:16px;background:#f3f8ff;color:#333;font-family:sans-serif";
+
+  panel.innerHTML = `
+    <h2>💳 入金状況チェック</h2>
+    <button id="mira-payment-run"
+      style="padding:12px 18px;background:#527ca9;color:white;border:0;border-radius:8px">
+      入金状況を確認する
+    </button>
+    <div id="mira-payment-result" style="margin-top:15px"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document.getElementById("mira-payment-run")
+    .addEventListener("click", function () {
+      const result = document.getElementById("mira-payment-result");
+
+      try {
+        const raw = localStorage.getItem("mira_design_manager_v1");
+        if (!raw) {
+          result.textContent = "基本管理データが見つかりません。";
+          return;
+        }
+
+        const data = JSON.parse(raw);
+        const orders = Array.isArray(data.orders) ? data.orders : [];
+
+        let paid = 0;
+        let unpaid = 0;
+        let paidCount = 0;
+        let unpaidCount = 0;
+
+        orders.forEach(order => {
+          const amount = Number(
+            order.amount ?? order.price ?? order.total ?? 0
+          );
+          const status = String(
+            order.paymentStatus ?? order.payment_status ??
+            order.payment ?? order.status ?? ""
+          ).toLowerCase();
+
+          if (/入金済|支払済|paid|complete|完了/.test(status)) {
+            paid += Number.isFinite(amount) ? amount : 0;
+            paidCount++;
+          } else {
+            unpaid += Number.isFinite(amount) ? amount : 0;
+            unpaidCount++;
+          }
+        });
+
+        result.replaceChildren();
+
+        [
+          "入金済み：" + paidCount + "件 ／ " + paid.toLocaleString("ja-JP") + "円",
+          "未確認・未入金：" + unpaidCount + "件 ／ " + unpaid.toLocaleString("ja-JP") + "円",
+          "合計注文数：" + orders.length + "件"
+        ].forEach(message => {
+          const p = document.createElement("p");
+          p.textContent = message;
+          result.appendChild(p);
+        });
+
+        const note = document.createElement("p");
+        note.textContent =
+          "※注文データの支払状況欄をもとにした簡易集計です。未入金と未確認は区別していません。";
+        result.appendChild(note);
+
+      } catch (error) {
+        result.textContent = "入金データを読み取れませんでした。";
+      }
+    });
+})();
+</script>
+
+
+
+
 
 
 
