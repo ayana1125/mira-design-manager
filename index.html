@@ -180,6 +180,62 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const expiry = document.getElementById("qExpiry");
+  const scope = document.getElementById("qScope");
+  const button = document.getElementById("makeQuote");
+
+  function dateText(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  // 制作内容の改行を修正
+  if (scope) {
+    scope.value = scope.value.replace(/\\n/g, "\n");
+    scope.addEventListener("input", function () {
+      scope.value = scope.value.replace(/\\n/g, "\n");
+    });
+  }
+
+  // 有効期限を14日後に設定
+  if (expiry && !expiry.value) {
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    expiry.value = dateText(d);
+  }
+
+  // 見積書に発行日と番号を追加
+  if (button) {
+    button.addEventListener("click", function () {
+      const output = document.getElementById("quoteText");
+      if (!output) return;
+
+      const today = dateText(new Date());
+      const number = "MD-" +
+        today.replace(/-/g, "") + "-" +
+        Math.random().toString(36)
+          .substring(2, 6).toUpperCase();
+
+      let content = output.textContent;
+      content = content.replace(/\\n/g, "\n");
+
+      content = content.replace(
+        /^MIRA DESIGN\n御見積書\n/,
+        "MIRA DESIGN\n御見積書\n" +
+        "発行日：" + today + "\n" +
+        "見積番号：" + number + "\n"
+      );
+
+      output.textContent = content;
+    });
+  }
+});
+</script>
+
+
 
 
 
