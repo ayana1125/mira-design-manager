@@ -7245,6 +7245,639 @@ render();
 })();
 </script>
 
+<!-- ⑨ MIRA DESIGN 月別レポート -->
+<section id="mira-monthly-209">
+  <h2>⑨ 月別売上・経費レポート</h2>
+  <button type="button" id="mira-monthly-run-209">月別データを集計</button>
+  <div id="mira-monthly-result-209" aria-live="polite"></div>
+</section>
+
+<style>
+#mira-monthly-209 {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: #fff;
+  color: #222;
+  line-height: 1.8;
+}
+#mira-monthly-209 button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+}
+#mira-monthly-result-209 {
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+</style>
+
+<script>
+(() => {
+  const button = document.getElementById("mira-monthly-run-209");
+  const result = document.getElementById("mira-monthly-result-209");
+  if (!button || !result || button.dataset.ready) return;
+  button.dataset.ready = "1";
+
+  button.addEventListener("click", () => {
+    try {
+      const raw = localStorage.getItem("mira_design_manager_v1");
+      if (!raw) {
+        result.textContent = "基本管理データが見つかりません。";
+        return;
+      }
+
+      const data = JSON.parse(raw);
+      const monthly = {};
+
+      const getMonth = item => {
+        const date = item.date || item.createdAt || item.created_at;
+        if (!date) return null;
+        const match = String(date).match(/^(\d{4})[-/](\d{1,2})/);
+        return match ? match[1] + "-" + match[2].padStart(2, "0") : null;
+      };
+
+      const getAmount = item => {
+        for (const key of ["amount", "price", "total"]) {
+          const value = Number(item[key]);
+          if (item[key] !== undefined && item[key] !== "" &&
+              Number.isFinite(value)) return value;
+        }
+        return 0;
+      };
+
+      const add = (records, type) => {
+        if (!Array.isArray(records)) return;
+        records.forEach(item => {
+          if (!item || typeof item !== "object") return;
+          const month = getMonth(item);
+          if (!month) return;
+          if (!monthly[month]) monthly[month] = { sales: 0, expenses: 0 };
+          monthly[month][type] += getAmount(item);
+        });
+      };
+
+      add(data.sales, "sales");
+      add(data.expenses, "expenses");
+
+      const months = Object.keys(monthly).sort().reverse();
+
+      if (!months.length) {
+        result.textContent = "集計できる日付データがありません。";
+        return;
+      }
+
+      result.innerHTML = "<h3>月別集計</h3>" +
+        months.map(month => {
+          const item = monthly[month];
+          const profit = item.sales - item.expenses;
+          return "<div style='padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px'>" +
+            "<strong>" + month + "</strong><br>" +
+            "売上：" + item.sales.toLocaleString("ja-JP") + "円<br>" +
+            "経費：" + item.expenses.toLocaleString("ja-JP") + "円<br>" +
+            "差額：" + profit.toLocaleString("ja-JP") + "円</div>";
+        }).join("") +
+        "<p>※日付形式や金額項目が異なるデータは集計されません。差額は参考値で、利益確定額ではありません。</p>";
+    } catch (error) {
+      result.textContent = "集計エラー：" + error.message;
+    }
+  });
+})();
+</script>
+
+<!-- ⑩ MIRA DESIGN 顧客管理レポート -->
+<section id="mira-customer-report-210">
+  <h2>⑩ 顧客管理レポート</h2>
+  <button type="button" id="mira-customer-report-run-210">
+    顧客データを確認
+  </button>
+  <div id="mira-customer-report-result-210" aria-live="polite"></div>
+</section>
+
+<style>
+#mira-customer-report-210 {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: #fff;
+  color: #222;
+  line-height: 1.8;
+}
+#mira-customer-report-210 button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+}
+#mira-customer-report-result-210 {
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+</style>
+
+<script>
+(() => {
+  const button = document.getElementById("mira-customer-report-run-210");
+  const result = document.getElementById("mira-customer-report-result-210");
+  if (!button || !result || button.dataset.ready) return;
+  button.dataset.ready = "1";
+
+  button.addEventListener("click", () => {
+    try {
+      const raw = localStorage.getItem("mira_design_manager_v1");
+      if (!raw) {
+        result.textContent = "基本管理データが見つかりません。";
+        return;
+      }
+
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.customers)) {
+        result.textContent = "顧客データの形式を確認してください。";
+        return;
+      }
+
+      const customers = data.customers;
+
+      result.innerHTML =
+        "<h3>顧客一覧</h3>" +
+        "<p>登録顧客数：" + customers.length + "件</p>" +
+        (customers.length
+          ? customers.map((customer, index) => {
+              const name = customer.name || customer.customerName || "名前未登録";
+              const email = customer.email || "未登録";
+              const phone = customer.phone || customer.tel || "未登録";
+
+              const card = document.createElement("div");
+              card.style.cssText =
+                "padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px";
+
+              const heading = document.createElement("strong");
+              heading.textContent = (index + 1) + ". " + name;
+              const details = document.createElement("p");
+              details.textContent = "メール：" + email + " / 電話：" + phone;
+              card.append(heading, details);
+              return card.outerHTML;
+            }).join("")
+          : "<p>登録されている顧客はいません。</p>") +
+        "<p>※この画面は顧客情報の読み取り専用です。</p>";
+    } catch (error) {
+      result.textContent = "確認エラー：" + error.message;
+    }
+  });
+})();
+</script>
+
+<!-- ⑪ MIRA DESIGN 注文管理レポート -->
+<section id="mira-order-report-211">
+  <h2>⑪ 注文管理レポート</h2>
+  <button type="button" id="mira-order-report-run-211">
+    注文データを確認
+  </button>
+  <div id="mira-order-report-result-211" aria-live="polite"></div>
+</section>
+
+<style>
+#mira-order-report-211 {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: #fff;
+  color: #222;
+  line-height: 1.8;
+}
+#mira-order-report-211 button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+}
+#mira-order-report-result-211 {
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+</style>
+
+<script>
+(() => {
+  const button = document.getElementById("mira-order-report-run-211");
+  const result = document.getElementById("mira-order-report-result-211");
+  if (!button || !result || button.dataset.ready) return;
+  button.dataset.ready = "1";
+
+  button.addEventListener("click", () => {
+    try {
+      const raw = localStorage.getItem("mira_design_manager_v1");
+      if (!raw) {
+        result.textContent = "基本管理データが見つかりません。";
+        return;
+      }
+
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.orders)) {
+        result.textContent = "注文データの形式を確認してください。";
+        return;
+      }
+
+      const orders = data.orders;
+      const money = value =>
+        Number.isFinite(value)
+          ? value.toLocaleString("ja-JP") + "円"
+          : "未登録";
+
+      const cards = orders.map((order, index) => {
+        const name = order.customerName || order.customer || "顧客名未登録";
+        const product = order.productName || order.product || "内容未登録";
+        const amount = Number(order.amount ?? order.price ?? order.total);
+        const status = order.status || "状況未登録";
+        const date = order.date || order.createdAt || "日付未登録";
+
+        const card = document.createElement("div");
+        card.style.cssText =
+          "padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px";
+
+        const heading = document.createElement("strong");
+        heading.textContent = (index + 1) + ". " + name;
+
+        const details = document.createElement("p");
+        details.textContent =
+          "内容：" + product +
+          " / 金額：" + money(amount) +
+          " / 状況：" + status +
+          " / 日付：" + date;
+
+        card.append(heading, details);
+        return card.outerHTML;
+      });
+
+      result.innerHTML =
+        "<h3>注文一覧</h3>" +
+        "<p>登録注文数：" + orders.length + "件</p>" +
+        (cards.length ? cards.join("") : "<p>注文はありません。</p>") +
+        "<p>※読み取り専用です。金額や注文状況は元データの項目名に依存します。</p>";
+    } catch (error) {
+      result.textContent = "確認エラー：" + error.message;
+    }
+  });
+})();
+</script>
+
+<!-- ⑫ MIRA DESIGN 請求書管理レポート -->
+<section id="mira-invoice-report-212">
+  <h2>⑫ 請求書管理レポート</h2>
+  <button type="button" id="mira-invoice-report-run-212">
+    請求書データを確認
+  </button>
+  <div id="mira-invoice-report-result-212" aria-live="polite"></div>
+</section>
+
+<style>
+#mira-invoice-report-212 {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: #fff;
+  color: #222;
+  line-height: 1.8;
+}
+#mira-invoice-report-212 button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+}
+#mira-invoice-report-result-212 {
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+</style>
+
+<script>
+(() => {
+  const button = document.getElementById("mira-invoice-report-run-212");
+  const result = document.getElementById("mira-invoice-report-result-212");
+  if (!button || !result || button.dataset.ready) return;
+  button.dataset.ready = "1";
+
+  button.addEventListener("click", () => {
+    try {
+      const raw = localStorage.getItem("mira_design_manager_v1");
+      if (!raw) {
+        result.textContent = "基本管理データが見つかりません。";
+        return;
+      }
+
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.invoices)) {
+        result.textContent = "請求書データの形式を確認してください。";
+        return;
+      }
+
+      const invoices = data.invoices;
+      const money = value => {
+        const number = Number(value);
+        return value !== undefined && value !== "" && Number.isFinite(number)
+          ? number.toLocaleString("ja-JP") + "円"
+          : "未登録";
+      };
+
+      const cards = invoices.map((invoice, index) => {
+        const number = invoice.invoiceNumber || invoice.number || "番号未登録";
+        const customer = invoice.customerName || invoice.customer || "顧客名未登録";
+        const amount = invoice.amount ?? invoice.total ?? invoice.price;
+        const date = invoice.date || invoice.createdAt || "日付未登録";
+        const status = invoice.status || "状況未登録";
+
+        const card = document.createElement("div");
+        card.style.cssText =
+          "padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px";
+
+        const heading = document.createElement("strong");
+        heading.textContent = (index + 1) + ". " + number;
+
+        const details = document.createElement("p");
+        details.textContent =
+          "顧客：" + customer +
+          " / 金額：" + money(amount) +
+          " / 発行日：" + date +
+          " / 状況：" + status;
+
+        card.append(heading, details);
+        return card.outerHTML;
+      });
+
+      result.innerHTML =
+        "<h3>請求書一覧</h3>" +
+        "<p>登録請求書数：" + invoices.length + "件</p>" +
+        (cards.length ? cards.join("") : "<p>請求書はありません。</p>") +
+        "<p>※読み取り専用です。項目名が異なる場合は一部表示されません。</p>";
+    } catch (error) {
+      result.textContent = "確認エラー：" + error.message;
+    }
+  });
+})();
+</script>
+
+<!-- ⑬ MIRA DESIGN 最終完成チェック -->
+<section id="mira-final-213">
+  <h2>🏆 MIRA DESIGN 最終完成チェック</h2>
+  <p>保存データ・基本機能・接続設定を確認します。</p>
+  <button type="button" id="mira-final-run-213">
+    最終チェックを実行
+  </button>
+  <div id="mira-final-result-213" aria-live="polite"></div>
+</section>
+
+<style>
+#mira-final-213 {
+  margin: 20px 0;
+  padding: 18px;
+  border: 2px solid #b48a4a;
+  border-radius: 14px;
+  background: #fffaf1;
+  color: #29251f;
+  font-family: sans-serif;
+  line-height: 1.8;
+}
+#mira-final-213 button {
+  width: 100%;
+  padding: 13px;
+  border: 0;
+  border-radius: 9px;
+  background: #29251f;
+  color: white;
+  font-weight: bold;
+}
+#mira-final-result-213 {
+  margin-top: 15px;
+  overflow-wrap: anywhere;
+}
+#mira-final-result-213 .check-item {
+  padding: 10px;
+  margin: 7px 0;
+  background: white;
+  border: 1px solid #e5dccb;
+  border-radius: 8px;
+}
+</style>
+
+<script>
+(() => {
+  const button = document.getElementById("mira-final-run-213");
+  const result = document.getElementById("mira-final-result-213");
+
+  if (!button || !result || button.dataset.ready) return;
+  button.dataset.ready = "1";
+
+  button.addEventListener("click", () => {
+    const checks = [];
+    const add = (name, ok, detail) => {
+      checks.push({name, ok, detail});
+    };
+
+    try {
+      add(
+        "ブラウザ保存機能",
+        typeof localStorage !== "undefined",
+        "利用可能"
+      );
+
+      const raw = localStorage.getItem("mira_design_manager_v1");
+      let data = null;
+
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        data = null;
+      }
+
+      add(
+        "基本管理データ",
+        !!data && typeof data === "object",
+        data ? "読み取り可能" : "未登録または形式を確認"
+      );
+
+      [
+        ["顧客", "customers"],
+        ["注文", "orders"],
+        ["売上", "sales"],
+        ["経費", "expenses"],
+        ["請求書", "invoices"]
+      ].forEach(([name, key]) => {
+        const valid = !!data && Array.isArray(data[key]);
+        add(
+          name + "データ",
+          valid,
+          valid ? data[key].length + "件" : "未登録または形式を確認"
+        );
+      });
+
+      const config = localStorage.getItem("mira_sb_config_v1");
+      let validConfig = false;
+
+      try {
+        const parsed = config ? JSON.parse(config) : null;
+        validConfig = !!(
+          parsed &&
+          typeof parsed.url === "string" &&
+          typeof parsed.key === "string"
+        );
+      } catch (e) {}
+
+      add(
+        "Supabase接続設定",
+        validConfig,
+        validConfig ? "設定情報あり（接続成功は未確認）" : "設定なし"
+      );
+
+      add(
+        "バックアップ機能",
+        !!document.getElementById("mira-backup-203"),
+        "バックアップ画面の有無"
+      );
+
+      add(
+        "請求書レポート",
+        !!document.getElementById("mira-invoice-report-212"),
+        "請求書レポート画面の有無"
+      );
+
+    } catch (error) {
+      add("診断処理", false, error.message);
+    }
+
+    result.replaceChildren();
+
+    const heading = document.createElement("h3");
+    heading.textContent = "最終チェック結果";
+    result.appendChild(heading);
+
+    const passed = checks.filter(item => item.ok).length;
+
+    const summary = document.createElement("p");
+    summary.textContent =
+      "確認できた項目：" + passed + " / " + checks.length;
+    result.appendChild(summary);
+
+    checks.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "check-item";
+
+      const title = document.createElement("strong");
+      title.textContent = (item.ok ? "✓ " : "⚠ ") + item.name;
+
+      const detail = document.createElement("div");
+      detail.textContent = item.detail;
+
+      div.append(title, detail);
+      result.appendChild(div);
+    });
+
+    const note = document.createElement("p");
+    note.textContent =
+      "※この診断は画面と保存データの存在確認です。実際の登録・更新・請求書発行・クラウド連携が正常に動くかは別途テストが必要です。";
+    result.appendChild(note);
+  });
+})();
+</script>
+
+<!-- ⑭ MIRA DESIGN データ統合状況チェック -->
+<script>
+(function () {
+  if (document.getElementById("mira-integration-214")) return;
+
+  const box = document.createElement("section");
+  box.id = "mira-integration-214";
+  box.style.cssText =
+    "max-width:1000px;margin:25px auto;padding:20px;background:#fffaf1;border:1px solid #c9a46a;border-radius:14px;font-family:sans-serif;color:#333";
+
+  box.innerHTML = `
+    <h2>⑭ データ統合状況チェック</h2>
+    <p>現在の保存データを読み取り、保存先ごとの状態を確認します。</p>
+    <button id="mira-integration-run-214"
+      style="padding:12px 18px;background:#29251f;color:white;border:0;border-radius:8px">
+      データを確認する
+    </button>
+    <div id="mira-integration-result-214" style="margin-top:15px"></div>
+  `;
+
+  document.body.appendChild(box);
+
+  document.getElementById("mira-integration-run-214")
+    .addEventListener("click", function () {
+      const result =
+        document.getElementById("mira-integration-result-214");
+
+      result.replaceChildren();
+
+      const stores = [
+        ["基本管理データ", "mira_design_manager_v1"],
+        ["追加管理機能⑨〜⑫", "mira_design_features_9_12"],
+        ["制作実績・注文履歴", "mira_design_features_21_22"],
+        ["Supabase接続設定", "mira_sb_config_v1"]
+      ];
+
+      stores.forEach(function (item) {
+        const row = document.createElement("div");
+        row.style.cssText =
+          "padding:12px;margin:8px 0;background:white;border:1px solid #ddd;border-radius:8px";
+
+        const title = document.createElement("strong");
+        title.textContent = item[0];
+
+        const detail = document.createElement("p");
+
+        try {
+          const raw = localStorage.getItem(item[1]);
+
+          if (!raw) {
+            detail.textContent = "保存データなし";
+          } else {
+            const data = JSON.parse(raw);
+
+            if (item[1] === "mira_design_manager_v1") {
+              detail.textContent =
+                "顧客：" + (Array.isArray(data.customers) ? data.customers.length : "未確認") +
+                "件／注文：" + (Array.isArray(data.orders) ? data.orders.length : "未確認") +
+                "件／経費：" + (Array.isArray(data.expenses) ? data.expenses.length : "未確認") + "件";
+            } else if (item[1] === "mira_design_features_9_12") {
+              detail.textContent =
+                "追加注文：" + (Array.isArray(data.orders) ? data.orders.length : "未確認") + "件";
+            } else if (item[1] === "mira_design_features_21_22") {
+              detail.textContent =
+                "制作実績：" + (Array.isArray(data.gallery) ? data.gallery.length : "未確認") +
+                "件／注文履歴：" + (Array.isArray(data.history) ? data.history.length : "未確認") + "件";
+            } else {
+              detail.textContent =
+                data && data.url && data.key
+                  ? "接続設定情報あり（接続成功は未確認）"
+                  : "設定内容を確認してください";
+            }
+          }
+        } catch (error) {
+          detail.textContent = "読み取りエラー：" + error.message;
+        }
+
+        row.append(title, detail);
+        result.appendChild(row);
+      });
+
+      const note = document.createElement("p");
+      note.textContent =
+        "※この機能は保存先の確認のみです。データの統合や移動は行いません。";
+      result.appendChild(note);
+    });
+})();
+</script>
+
 
 
 
